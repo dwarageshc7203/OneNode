@@ -1,10 +1,14 @@
 # ninja log v5
-2	429	1776925421200718382	dropin_autogen/timestamp	5aa0069059df7be7
-2	429	1776925421200718382	dropin_autogen/mocs_compilation.cpp	5aa0069059df7be7
-2	429	1776925421200718382	/home/dwaragesh/Documents/Projects/One-Node/build/dropin_autogen/timestamp	5aa0069059df7be7
-2	429	1776925421200718382	/home/dwaragesh/Documents/Projects/One-Node/build/dropin_autogen/mocs_compilation.cpp	5aa0069059df7be7
-431	2750	1776925423535385910	CMakeFiles/dropin.dir/pairingserver.cpp.o	d56f6603034f8a1a
-430	2813	1776925423597864516	CMakeFiles/dropin.dir/main.cpp.o	e4f6d052ab88089
-429	2847	1776925423630866528	CMakeFiles/dropin.dir/dropin_autogen/mocs_compilation.cpp.o	6c775f6a164094fc
-430	3147	1776925423932351136	CMakeFiles/dropin.dir/mainwindow.cpp.o	acc6b45bc61e0f2a
-3147	3931	1776925424707932188	dropin	20c4c9e1c7563155
+1	240	1776938202791522554	dropin_autogen/timestamp	5aa0069059df7be7
+1	240	1776938202791522554	dropin_autogen/mocs_compilation.cpp	5aa0069059df7be7
+1	240	1776938202791522554	/home/dwaragesh/Documents/Projects/One-Node/build/dropin_autogen/timestamp	5aa0069059df7be7
+1	240	1776938202791522554	/home/dwaragesh/Documents/Projects/One-Node/build/dropin_autogen/mocs_compilation.cpp	5aa0069059df7be7
+240	260	1776938202816526472	dropin_autogen/EWIEGA46WW/qrc_resources.cpp	1c120bae119d76f9
+240	260	1776938202816526472	/home/dwaragesh/Documents/Projects/One-Node/build/dropin_autogen/EWIEGA46WW/qrc_resources.cpp	1c120bae119d76f9
+261	294	1776938202851531958	CMakeFiles/dropin.dir/dropin_autogen/EWIEGA46WW/qrc_resources.cpp.o	8010c6bb5decb177
+261	1154	1776938203710939145	CMakeFiles/dropin.dir/pairingserver.cpp.o	d56f6603034f8a1a
+261	1294	1776938203850768176	CMakeFiles/dropin.dir/filetransfer.cpp.o	b1d151280174f708
+261	1323	1776938203880272604	CMakeFiles/dropin.dir/main.cpp.o	e4f6d052ab88089
+261	1609	1776938204166622991	CMakeFiles/dropin.dir/mainwindow.cpp.o	acc6b45bc61e0f2a
+260	1676	1776938204232748212	CMakeFiles/dropin.dir/dropin_autogen/mocs_compilation.cpp.o	6c775f6a164094fc
+1676	2001	1776938204555798752	dropin	3d6dec87ba0f16c8

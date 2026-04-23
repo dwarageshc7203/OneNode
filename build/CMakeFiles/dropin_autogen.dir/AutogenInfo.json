@@ -312,13 +312,20 @@
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6Network/Qt6NetworkTargets.cmake",
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6Network/Qt6NetworkTargets-none.cmake",
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6Network/Qt6NetworkAdditionalTargetInfo.cmake",
-		"/usr/lib/x86_64-linux-gnu/cmake/Qt6Network/Qt6NetworkVersionlessTargets.cmake"
+		"/usr/lib/x86_64-linux-gnu/cmake/Qt6Network/Qt6NetworkVersionlessTargets.cmake",
+		"/home/dwaragesh/Documents/Projects/One-Node/resources.qrc"
 	],
 	"CMAKE_SOURCE_DIR" : "/home/dwaragesh/Documents/Projects/One-Node",
 	"DEP_FILE" : "/home/dwaragesh/Documents/Projects/One-Node/build/dropin_autogen/deps",
 	"DEP_FILE_RULE_NAME" : "dropin_autogen/timestamp",
 	"HEADERS" : 
 	[
+		[
+			"/home/dwaragesh/Documents/Projects/One-Node/filetransfer.h",
+			"Mu",
+			"EWIEGA46WW/moc_filetransfer.cpp",
+			null
+		],
 		[
 			"/home/dwaragesh/Documents/Projects/One-Node/mainwindow.h",
 			"Mu",
@@ -398,6 +405,11 @@
 	"SETTINGS_FILE" : "/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/dropin_autogen.dir/AutogenUsed.txt",
 	"SOURCES" : 
 	[
+		[
+			"/home/dwaragesh/Documents/Projects/One-Node/filetransfer.cpp",
+			"Mu",
+			null
+		],
 		[ "/home/dwaragesh/Documents/Projects/One-Node/main.cpp", "Mu", null ],
 		[
 			"/home/dwaragesh/Documents/Projects/One-Node/mainwindow.cpp",

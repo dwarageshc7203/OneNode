@@ -4,11 +4,14 @@ dropin_autogen/timestamp: \
   CMakeFiles/3.28.3/CMakeCXXCompiler.cmake \
   CMakeFiles/3.28.3/CMakeSystem.cmake \
   dropin_autogen/moc_predefs.h \
+  /home/dwaragesh/Documents/Projects/One-Node/filetransfer.cpp \
+  /home/dwaragesh/Documents/Projects/One-Node/filetransfer.h \
   /home/dwaragesh/Documents/Projects/One-Node/main.cpp \
   /home/dwaragesh/Documents/Projects/One-Node/mainwindow.cpp \
   /home/dwaragesh/Documents/Projects/One-Node/mainwindow.h \
   /home/dwaragesh/Documents/Projects/One-Node/pairingserver.cpp \
   /home/dwaragesh/Documents/Projects/One-Node/pairingserver.h \
+  /home/dwaragesh/Documents/Projects/One-Node/resources.qrc \
   /usr/bin/cmake \
   /usr/include/alloca.h \
   /usr/include/asm-generic/errno-base.h \

@@ -27,7 +27,7 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 namespace {
 struct qt_meta_stringdata_MainWindow_t {
-    uint offsetsAndSizes[24];
+    uint offsetsAndSizes[32];
     char stringdata0[11];
     char stringdata1[16];
     char stringdata2[1];
@@ -39,7 +39,11 @@ struct qt_meta_stringdata_MainWindow_t {
     char stringdata8[15];
     char stringdata9[11];
     char stringdata10[6];
-    char stringdata11[16];
+    char stringdata11[9];
+    char stringdata12[16];
+    char stringdata13[15];
+    char stringdata14[9];
+    char stringdata15[17];
 };
 #define QT_MOC_LITERAL(ofs, len) \
     uint(sizeof(qt_meta_stringdata_MainWindow_t::offsetsAndSizes) + ofs), len 
@@ -56,7 +60,11 @@ Q_CONSTINIT static const qt_meta_stringdata_MainWindow_t qt_meta_stringdata_Main
         QT_MOC_LITERAL(115, 14),  // "onDevicePaired"
         QT_MOC_LITERAL(130, 10),  // "deviceName"
         QT_MOC_LITERAL(141, 5),  // "token"
-        QT_MOC_LITERAL(147, 15)   // "onPairingFailed"
+        QT_MOC_LITERAL(147, 8),  // "deviceIp"
+        QT_MOC_LITERAL(156, 15),  // "onPairingFailed"
+        QT_MOC_LITERAL(172, 14),  // "onTransferDone"
+        QT_MOC_LITERAL(187, 8),  // "fileName"
+        QT_MOC_LITERAL(196, 16)   // "onTransferFailed"
     },
     "MainWindow",
     "onTrayActivated",
@@ -69,7 +77,11 @@ Q_CONSTINIT static const qt_meta_stringdata_MainWindow_t qt_meta_stringdata_Main
     "onDevicePaired",
     "deviceName",
     "token",
-    "onPairingFailed"
+    "deviceIp",
+    "onPairingFailed",
+    "onTransferDone",
+    "fileName",
+    "onTransferFailed"
 };
 #undef QT_MOC_LITERAL
 } // unnamed namespace
@@ -80,7 +92,7 @@ Q_CONSTINIT static const uint qt_meta_data_MainWindow[] = {
       10,       // revision
        0,       // classname
        0,    0, // classinfo
-       6,   14, // methods
+       8,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -88,19 +100,23 @@ Q_CONSTINIT static const uint qt_meta_data_MainWindow[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    1,   50,    2, 0x08,    1 /* Private */,
-       5,    0,   53,    2, 0x08,    3 /* Private */,
-       6,    0,   54,    2, 0x08,    4 /* Private */,
-       7,    0,   55,    2, 0x08,    5 /* Private */,
-       8,    2,   56,    2, 0x08,    6 /* Private */,
-      11,    1,   61,    2, 0x08,    9 /* Private */,
+       1,    1,   62,    2, 0x08,    1 /* Private */,
+       5,    0,   65,    2, 0x08,    3 /* Private */,
+       6,    0,   66,    2, 0x08,    4 /* Private */,
+       7,    0,   67,    2, 0x08,    5 /* Private */,
+       8,    3,   68,    2, 0x08,    6 /* Private */,
+      12,    1,   75,    2, 0x08,   10 /* Private */,
+      13,    1,   78,    2, 0x08,   12 /* Private */,
+      15,    1,   81,    2, 0x08,   14 /* Private */,
 
  // slots: parameters
     QMetaType::Void, 0x80000000 | 3,    4,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void, QMetaType::QString, QMetaType::QString,    9,   10,
+    QMetaType::Void, QMetaType::QString, QMetaType::QString, QMetaType::QString,    9,   10,   11,
+    QMetaType::Void, QMetaType::QString,    4,
+    QMetaType::Void, QMetaType::QString,   14,
     QMetaType::Void, QMetaType::QString,    4,
 
        0        // eod
@@ -128,7 +144,14 @@ Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
         // method 'onPairingFailed'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'onTransferDone'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'onTransferFailed'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
         QtPrivate::TypeAndForceComplete<const QString &, std::false_type>
     >,
@@ -145,8 +168,10 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 1: _t->onQuitClicked(); break;
         case 2: _t->onRegenerateClicked(); break;
         case 3: _t->onTickTimer(); break;
-        case 4: _t->onDevicePaired((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
+        case 4: _t->onDevicePaired((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[3]))); break;
         case 5: _t->onPairingFailed((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 6: _t->onTransferDone((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        case 7: _t->onTransferFailed((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
         default: ;
         }
     }
@@ -171,13 +196,13 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 6)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 6;
+        _id -= 8;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 6)
+        if (_id < 8)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 6;
+        _id -= 8;
     }
     return _id;
 }
