@@ -65,11 +65,6 @@ class MainActivity : AppCompatActivity() {
         }
         override fun onServiceLost(info: NsdServiceInfo) {
             Log.d("OneNode", "Service lost: ${info.serviceName}")
-            runOnUiThread {
-                if (prefs.getString("pairing_token", null) == null) {
-                    tvStatus.text = "⚠️ Desktop went offline"
-                }
-            }
         }
     }
 

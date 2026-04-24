@@ -6,7 +6,7 @@
 
 FileTransfer::FileTransfer(QObject *parent)
     : QObject(parent), socket(new QTcpSocket(this)),
-      fileSize(0), totalWritten(0)
+    fileSize(0), totalWritten(0), transferActive(false), transferCompleted(false)
 {
     connect(socket, &QTcpSocket::connected,
             this, &FileTransfer::onConnected);
@@ -20,9 +20,16 @@ void FileTransfer::sendFile(const QString &path, const QString &peerIp, int port
     filePath     = path;
     fileName     = QFileInfo(path).fileName();
     totalWritten = 0;
+    transferActive = true;
+    transferCompleted = false;
+
+    if (socket->state() != QAbstractSocket::UnconnectedState) {
+        socket->abort();
+    }
 
     QFile f(filePath);
     if (!f.exists()) {
+        transferActive = false;
         emit transferFailed("File not found: " + fileName);
         return;
     }
@@ -36,6 +43,7 @@ void FileTransfer::onConnected() {
     QFile f(filePath);
     if (!f.open(QIODevice::ReadOnly)) {
         qDebug() << "Cannot open file!";
+        transferActive = false;
         emit transferFailed("Cannot open file: " + fileName);
         return;
     }
@@ -83,6 +91,8 @@ void FileTransfer::onConnected() {
     socket->flush();
 
     qDebug() << "Transfer complete, total sent:" << totalSent;
+    transferCompleted = true;
+    transferActive = false;
     emit transferDone(fileName);
     socket->disconnectFromHost();
 }
@@ -96,6 +106,16 @@ void FileTransfer::onBytesWritten(qint64 bytes) {
 }
 
 void FileTransfer::onError(QAbstractSocket::SocketError error) {
-    Q_UNUSED(error)
+    if (!transferActive) {
+        return;
+    }
+
+    if (transferCompleted &&
+        (error == QAbstractSocket::RemoteHostClosedError ||
+         error == QAbstractSocket::OperationError)) {
+        return;
+    }
+
+    transferActive = false;
     emit transferFailed("Connection error: " + socket->errorString());
 }

@@ -199,10 +199,11 @@ void MainWindow::onTransferFailed(const QString &reason) {
     trayIcon->showMessage("One Node", "Transfer failed — device may be offline",
                           QSystemTrayIcon::Warning, 3000);
 
-    if (reason.contains("Connection", Qt::CaseInsensitive)
+    if (reason.startsWith("Connection error:", Qt::CaseInsensitive)
         || reason.contains("refused", Qt::CaseInsensitive)
         || reason.contains("timed out", Qt::CaseInsensitive)
-        || reason.contains("error", Qt::CaseInsensitive)) {
+        || reason.contains("network is unreachable", Qt::CaseInsensitive)
+        || reason.contains("host not found", Qt::CaseInsensitive)) {
         settings->remove("device_name");
         settings->remove("pairing_token");
         settings->remove("device_ip");
