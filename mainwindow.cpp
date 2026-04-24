@@ -76,7 +76,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     mdnsAdvertiser->start();
     setAcceptDrops(true);
 
-    if (settings->contains("device_ip") && settings->contains("pairing_token")) {
+    const QString savedIp = settings->value("device_ip").toString();
+    const QString savedToken = settings->value("pairing_token").toString();
+    if (!savedIp.isEmpty() && !savedToken.isEmpty()) {
         showLinkedState(settings->value("device_name").toString());
     } else {
         onRegenerateClicked();
@@ -406,6 +408,8 @@ void MainWindow::setupDesktopReceiver() {
 }
 
 void MainWindow::processIncomingTransfer(QTcpSocket *socket) {
+    if (!socket || !socket->isValid()) return;
+
     auto it = incomingTransfers.find(socket);
     if (it == incomingTransfers.end()) return;
 
@@ -417,22 +421,26 @@ void MainWindow::processIncomingTransfer(QTcpSocket *socket) {
             if (state.buffer.size() < 4) return;
             state.tokenLength = readBigEndianInt32(state.buffer.left(4));
             state.buffer.remove(0, 4);
-        }
-        if (state.token.isEmpty() && state.tokenLength > 0) {
-            if (state.buffer.size() < state.tokenLength) return;
-            state.token = QString::fromUtf8(state.buffer.left(state.tokenLength));
-            state.buffer.remove(0, state.tokenLength);
-            
-            if (state.token != settings->value("pairing_token").toString()) {
-                qWarning() << "Invalid pairing token received!";
+
+            if (state.tokenLength <= 0 || state.tokenLength > 1024) {
+                qWarning() << "Invalid token length:" << state.tokenLength;
                 cleanupIncomingTransfer(socket);
                 socket->disconnectFromHost();
                 return;
             }
-        } else if (state.token.isEmpty() && state.tokenLength == 0) {
-            // No token provided?
-            if ("" != settings->value("pairing_token").toString()) {
-                qWarning() << "Missing pairing token!";
+        }
+        if (state.token.isEmpty()) {
+            if (state.buffer.size() < state.tokenLength) return;
+
+            QByteArray tokenBytes = state.buffer.left(state.tokenLength);
+            state.buffer.remove(0, state.tokenLength);
+
+            state.token = QString::fromUtf8(tokenBytes);
+            QString expectedToken = settings->value("pairing_token").toString();
+            if (state.token != expectedToken) {
+                qWarning() << "Invalid pairing token received!";
+                qDebug() << "Expected:" << expectedToken;
+                qDebug() << "Received:" << state.token;
                 cleanupIncomingTransfer(socket);
                 socket->disconnectFromHost();
                 return;
@@ -443,6 +451,13 @@ void MainWindow::processIncomingTransfer(QTcpSocket *socket) {
             if (state.buffer.size() < 4) return;
             state.nameLength = readBigEndianInt32(state.buffer.left(4));
             state.buffer.remove(0, 4);
+
+            if (state.nameLength <= 0 || state.nameLength > 4096) {
+                qWarning() << "Invalid file name length:" << state.nameLength;
+                cleanupIncomingTransfer(socket);
+                socket->disconnectFromHost();
+                return;
+            }
         }
         if (state.fileName.isEmpty()) {
             if (state.buffer.size() < state.nameLength) return;
@@ -454,6 +469,13 @@ void MainWindow::processIncomingTransfer(QTcpSocket *socket) {
             if (state.buffer.size() < 8) return;
             state.fileSize = readBigEndianInt64(state.buffer.left(8));
             state.buffer.remove(0, 8);
+
+            if (state.fileSize < 0) {
+                qWarning() << "Invalid incoming file size:" << state.fileSize;
+                cleanupIncomingTransfer(socket);
+                socket->disconnectFromHost();
+                return;
+            }
 
             QString downloadsPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
             if (downloadsPath.isEmpty()) downloadsPath = QDir::homePath();
@@ -518,4 +540,83 @@ void MainWindow::cleanupIncomingTransfer(QTcpSocket *socket) {
     }
     incomingTransfers.erase(it);
     socket->deleteLater();
+}
+
+void MainWindow::startHeartbeat() {
+    pingFailures = 0;
+    heartbeatOnline = true;
+    pingInFlight = false;
+    heartbeatTimer->start();
+}
+
+void MainWindow::stopHeartbeat() {
+    heartbeatTimer->stop();
+    pingInFlight = false;
+}
+
+void MainWindow::sendHeartbeatPing() {
+    if (pingInFlight) return;
+
+    QString peerIp = settings->value("device_ip").toString();
+    QString token  = settings->value("pairing_token").toString();
+
+    if (peerIp.isEmpty() || token.isEmpty()) return;
+
+    pingInFlight = true;
+
+    QTcpSocket *socket = new QTcpSocket(this);
+
+    QTimer::singleShot(2500, socket, [this, socket]() {
+        if (socket->state() == QAbstractSocket::ConnectedState
+            || socket->state() == QAbstractSocket::ConnectingState) {
+            markHeartbeatFailure();
+            socket->abort();
+            socket->deleteLater();
+            pingInFlight = false;
+        }
+    });
+
+    connect(socket, &QTcpSocket::connected, this, [this, socket]() {
+        socket->write("ping\n");
+        socket->flush();
+    });
+
+    connect(socket, &QTcpSocket::readyRead, this, [this, socket]() {
+        QByteArray response = socket->readAll().trimmed();
+        if (response == "pong") {
+            markHeartbeatSuccess();
+        } else {
+            markHeartbeatFailure();
+        }
+        socket->disconnectFromHost();
+        socket->deleteLater();
+        pingInFlight = false;
+    });
+
+    connect(socket, &QTcpSocket::errorOccurred, this, [this, socket]() {
+        markHeartbeatFailure();
+        socket->deleteLater();
+        pingInFlight = false;
+    });
+
+    socket->connectToHost(peerIp, 45681);
+}
+
+void MainWindow::markHeartbeatSuccess() {
+    pingFailures = 0;
+
+    if (!heartbeatOnline) {
+        heartbeatOnline = true;
+        statusLabel->setText("✅  Connection restored");
+    }
+}
+
+void MainWindow::markHeartbeatFailure() {
+    pingFailures++;
+
+    if (pingFailures >= 3) {
+        heartbeatTimer->stop();
+        heartbeatOnline = false;
+        statusLabel->setText("⚠️  Device may be offline");
+    }
 }

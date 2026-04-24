@@ -4,7 +4,7 @@
 	"CMAKE_CURRENT_BINARY_DIR" : "/home/dwaragesh/Documents/Projects/One-Node/build",
 	"CMAKE_CURRENT_SOURCE_DIR" : "/home/dwaragesh/Documents/Projects/One-Node",
 	"CMAKE_SOURCE_DIR" : "/home/dwaragesh/Documents/Projects/One-Node",
-	"GENERATOR" : "Ninja",
+	"GENERATOR" : "Unix Makefiles",
 	"INCLUDE_DIR" : "/home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/include",
 	"INPUTS" : [ "/home/dwaragesh/Documents/Projects/One-Node/icon.png" ],
 	"LOCK_FILE" : "/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/onenode_autogen.dir/AutoRcc_resources_EWIEGA46WW_Lock.lock",

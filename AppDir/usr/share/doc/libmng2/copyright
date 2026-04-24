@@ -1,0 +1,125 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: libmng
+Source: http://www.libmng.com
+Files-Excluded: contrib/msvc/mngview/sRGB.icm config.log config.status
+
+Files: *
+Copyright: 2000, Gerard Juyn <gerard@libmng.com>
+License: BSD-3-clause
+
+Files: debian/*
+Copyright: 2000-2002, Ivan E. Moore II <rkrusty@debian.org>,
+           2002, Luis Arocha <data@debian.org>,
+           2003-2006, Shiju p. Nair <shiju.p@gmail.com>,
+           2010-2022, Kartik Mistry <kartik@debian.org>.
+License: BSD-3-clause
+
+Files: contrib/delphi/libmng.pas
+Copyright: 2000-2004 Gerard Juyn <gerard@libmng.com>
+License: BSD-3-clause
+
+Files: contrib/bcb/mngdump/*
+Copyright: 2000 Andy Protano <a.a.protano@care4free.net>
+License: BSD-3-clause
+
+Files: contrib/gcc/mngtree/*
+Copyright: 2000 Gerard Juyn <gerard@libmng.com>
+License: BSD-3-clause
+
+Files: contrib/kylix/libmng.pas
+Copyright: 2000-2002 Gerard Juyn <gerard@libmng.com>
+License: BSD-3-clause
+
+License: BSD-3-clause
+ The MNG Library is supplied "AS IS". The Contributing Authors disclaim all
+ warranties, expressed or implied, including, without limitation, the
+ warranties of merchantability and of fitness for any purpose. The Contributing
+ Authors assume no liability for direct, indirect, incidental, special,
+ exemplary, or consequential damages, which may result from the use of the MNG
+ Library, even if advised of the possibility of such damage.
+ .
+ Permission is hereby granted to use, copy, modify, and distribute this source
+ code, or portions hereof, for any purpose, without fee, subject to the
+ following restrictions:
+ .
+ 1. The origin of this source code must not be misrepresented; you must not
+    claim that you wrote the original software.
+ .
+ 2. Altered versions must be plainly marked as such and must not be
+    misrepresented as being the original source.
+ .
+ 3. This Copyright notice may not be removed or altered from any source or
+    altered source distribution.
+ .
+ The Contributing Authors specifically permit, without fee, and encourage the
+ use of this source code as a component to supporting the MNG and JNG file
+ format in commercial products.  If you use this source code in a product,
+ acknowledgment would be highly appreciated.
+ .
+ Parts of this software have been adapted from the libpng package. Although
+ this library supports all features from the PNG specification (as MNG descends
+ from it) it does not require the libpng package. It does require the zlib
+ library and optionally the IJG jpeg library, and/or the "little-cms" library
+ by Marti Maria (depending on the inclusion of support for JNG and
+ Full-Color-Management respectively.
+ .
+ This library's function is primarily to read and display MNG animations. It is
+ not meant as a full-featured image-editing component! It does however offer
+ creation and editing functionality at the chunk level.(future modifications
+ may include some more support for creation and or editing)
+
+Files: contrib/gcc/gtk-mng-view/*
+Copyright: 2000 The Free Software Foundation
+License: LGPL-2+
+
+Files: contrib/msvc/mngplg/mngplg-src-1.0.1/*
+Copyright: 2000-2002 Jason Summersrnrn
+License: LGPL-2+
+
+License: LGPL-2+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+ .
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Lesser General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU Lesser General
+ Public License version 2.1 can be found in
+ "/usr/share/common-licenses/LGPL-2.1".
+
+Files: contrib/gcc/sdl-mngplay/*
+Copyright: 2003, Ralph Giles <giles@ashlu.bc.ca>
+License: GPL-2+
+
+Files: contrib/gcc/fbmngplay/*
+Copyright: 2001 Stefan Reinauer <stepan@suse.de>
+License: GPL-2+
+
+Files: contrib/gcc/xmngview/*
+Copyright: 2002 Gerd Knorr <kraxel@bytesex.org>
+License: GPL-2+
+
+Files: contrib/msvc/makemng/*
+Copyright: Alex Volkov <codepro@usa.net>
+License: GPL-2+
+
+License: GPL-2+
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program. If not, see <http://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".

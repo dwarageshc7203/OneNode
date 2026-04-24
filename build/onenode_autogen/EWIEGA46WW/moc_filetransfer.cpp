@@ -26,7 +26,7 @@ QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 namespace {
 struct qt_meta_stringdata_FileTransfer_t {
-    uint offsetsAndSizes[30];
+    uint offsetsAndSizes[32];
     char stringdata0[13];
     char stringdata1[16];
     char stringdata2[1];
@@ -42,6 +42,7 @@ struct qt_meta_stringdata_FileTransfer_t {
     char stringdata12[8];
     char stringdata13[29];
     char stringdata14[6];
+    char stringdata15[12];
 };
 #define QT_MOC_LITERAL(ofs, len) \
     uint(sizeof(qt_meta_stringdata_FileTransfer_t::offsetsAndSizes) + ofs), len 
@@ -61,7 +62,8 @@ Q_CONSTINIT static const qt_meta_stringdata_FileTransfer_t qt_meta_stringdata_Fi
         QT_MOC_LITERAL(126, 5),  // "bytes"
         QT_MOC_LITERAL(132, 7),  // "onError"
         QT_MOC_LITERAL(140, 28),  // "QAbstractSocket::SocketError"
-        QT_MOC_LITERAL(169, 5)   // "error"
+        QT_MOC_LITERAL(169, 5),  // "error"
+        QT_MOC_LITERAL(175, 11)   // "processNext"
     },
     "FileTransfer",
     "transferStarted",
@@ -77,7 +79,8 @@ Q_CONSTINIT static const qt_meta_stringdata_FileTransfer_t qt_meta_stringdata_Fi
     "bytes",
     "onError",
     "QAbstractSocket::SocketError",
-    "error"
+    "error",
+    "processNext"
 };
 #undef QT_MOC_LITERAL
 } // unnamed namespace
@@ -88,7 +91,7 @@ Q_CONSTINIT static const uint qt_meta_data_FileTransfer[] = {
       10,       // revision
        0,       // classname
        0,    0, // classinfo
-       7,   14, // methods
+       8,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -96,15 +99,16 @@ Q_CONSTINIT static const uint qt_meta_data_FileTransfer[] = {
        4,       // signalCount
 
  // signals: name, argc, parameters, tag, flags, initial metatype offsets
-       1,    1,   56,    2, 0x06,    1 /* Public */,
-       4,    1,   59,    2, 0x06,    3 /* Public */,
-       6,    1,   62,    2, 0x06,    5 /* Public */,
-       7,    1,   65,    2, 0x06,    7 /* Public */,
+       1,    1,   62,    2, 0x06,    1 /* Public */,
+       4,    1,   65,    2, 0x06,    3 /* Public */,
+       6,    1,   68,    2, 0x06,    5 /* Public */,
+       7,    1,   71,    2, 0x06,    7 /* Public */,
 
  // slots: name, argc, parameters, tag, flags, initial metatype offsets
-       9,    0,   68,    2, 0x08,    9 /* Private */,
-      10,    1,   69,    2, 0x08,   10 /* Private */,
-      12,    1,   72,    2, 0x08,   12 /* Private */,
+       9,    0,   74,    2, 0x08,    9 /* Private */,
+      10,    1,   75,    2, 0x08,   10 /* Private */,
+      12,    1,   78,    2, 0x08,   12 /* Private */,
+      15,    0,   81,    2, 0x08,   14 /* Private */,
 
  // signals: parameters
     QMetaType::Void, QMetaType::QString,    3,
@@ -116,6 +120,7 @@ Q_CONSTINIT static const uint qt_meta_data_FileTransfer[] = {
     QMetaType::Void,
     QMetaType::Void, QMetaType::LongLong,   11,
     QMetaType::Void, 0x80000000 | 13,   14,
+    QMetaType::Void,
 
        0        // eod
 };
@@ -148,7 +153,9 @@ Q_CONSTINIT const QMetaObject FileTransfer::staticMetaObject = { {
         QtPrivate::TypeAndForceComplete<qint64, std::false_type>,
         // method 'onError'
         QtPrivate::TypeAndForceComplete<void, std::false_type>,
-        QtPrivate::TypeAndForceComplete<QAbstractSocket::SocketError, std::false_type>
+        QtPrivate::TypeAndForceComplete<QAbstractSocket::SocketError, std::false_type>,
+        // method 'processNext'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>
     >,
     nullptr
 } };
@@ -166,6 +173,7 @@ void FileTransfer::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id
         case 4: _t->onConnected(); break;
         case 5: _t->onBytesWritten((*reinterpret_cast< std::add_pointer_t<qint64>>(_a[1]))); break;
         case 6: _t->onError((*reinterpret_cast< std::add_pointer_t<QAbstractSocket::SocketError>>(_a[1]))); break;
+        case 7: _t->processNext(); break;
         default: ;
         }
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
@@ -231,13 +239,13 @@ int FileTransfer::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 8;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 7)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 8;
     }
     return _id;
 }
