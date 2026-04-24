@@ -316,7 +316,7 @@
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6Network/Qt6NetworkTargets-none.cmake",
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6Network/Qt6NetworkAdditionalTargetInfo.cmake",
 		"/usr/lib/x86_64-linux-gnu/cmake/Qt6Network/Qt6NetworkVersionlessTargets.cmake",
-		"/home/dwaragesh/Documents/Projects/One-Node/resources.qrc"
+		"/home/dwaragesh/Documents/Projects/One-Node/resources/resources.qrc"
 	],
 	"CMAKE_SOURCE_DIR" : "/home/dwaragesh/Documents/Projects/One-Node",
 	"DEP_FILE" : "/home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/deps",
@@ -324,27 +324,27 @@
 	"HEADERS" : 
 	[
 		[
-			"/home/dwaragesh/Documents/Projects/One-Node/filetransfer.h",
+			"/home/dwaragesh/Documents/Projects/One-Node/src/filetransfer.h",
 			"Mu",
-			"EWIEGA46WW/moc_filetransfer.cpp",
+			"UVLADIE3JM/moc_filetransfer.cpp",
 			null
 		],
 		[
-			"/home/dwaragesh/Documents/Projects/One-Node/mainwindow.h",
+			"/home/dwaragesh/Documents/Projects/One-Node/src/mainwindow.h",
 			"Mu",
-			"EWIEGA46WW/moc_mainwindow.cpp",
+			"UVLADIE3JM/moc_mainwindow.cpp",
 			null
 		],
 		[
-			"/home/dwaragesh/Documents/Projects/One-Node/mdnsadvertiser.h",
+			"/home/dwaragesh/Documents/Projects/One-Node/src/mdnsadvertiser.h",
 			"Mu",
-			"EWIEGA46WW/moc_mdnsadvertiser.cpp",
+			"UVLADIE3JM/moc_mdnsadvertiser.cpp",
 			null
 		],
 		[
-			"/home/dwaragesh/Documents/Projects/One-Node/pairingserver.h",
+			"/home/dwaragesh/Documents/Projects/One-Node/src/pairingserver.h",
 			"Mu",
-			"EWIEGA46WW/moc_pairingserver.cpp",
+			"UVLADIE3JM/moc_pairingserver.cpp",
 			null
 		]
 	],
@@ -368,6 +368,7 @@
 	],
 	"MOC_INCLUDES" : 
 	[
+		"/home/dwaragesh/Documents/Projects/One-Node/src",
 		"/usr/include/x86_64-linux-gnu/qt6/QtCore",
 		"/usr/include/x86_64-linux-gnu/qt6",
 		"/usr/lib/x86_64-linux-gnu/qt6/mkspecs/linux-g++",
@@ -415,23 +416,27 @@
 	"SOURCES" : 
 	[
 		[
-			"/home/dwaragesh/Documents/Projects/One-Node/filetransfer.cpp",
-			"Mu",
-			null
-		],
-		[ "/home/dwaragesh/Documents/Projects/One-Node/main.cpp", "Mu", null ],
-		[
-			"/home/dwaragesh/Documents/Projects/One-Node/mainwindow.cpp",
+			"/home/dwaragesh/Documents/Projects/One-Node/src/filetransfer.cpp",
 			"Mu",
 			null
 		],
 		[
-			"/home/dwaragesh/Documents/Projects/One-Node/mdnsadvertiser.cpp",
+			"/home/dwaragesh/Documents/Projects/One-Node/src/main.cpp",
 			"Mu",
 			null
 		],
 		[
-			"/home/dwaragesh/Documents/Projects/One-Node/pairingserver.cpp",
+			"/home/dwaragesh/Documents/Projects/One-Node/src/mainwindow.cpp",
+			"Mu",
+			null
+		],
+		[
+			"/home/dwaragesh/Documents/Projects/One-Node/src/mdnsadvertiser.cpp",
+			"Mu",
+			null
+		],
+		[
+			"/home/dwaragesh/Documents/Projects/One-Node/src/pairingserver.cpp",
 			"Mu",
 			null
 		]

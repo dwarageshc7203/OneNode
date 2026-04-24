@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=One Node
-Comment=Send files to your phone instantly
-Exec=/home/dwaragesh/Documents/Projects/One-Node/build/dropin
-Icon=onenode
-Terminal=false
-Type=Application
-Categories=Utility;
-StartupWMClass=dropin

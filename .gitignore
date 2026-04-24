@@ -1,0 +1,6 @@
+build/
+dist/
+AppDir/
+packaging/AppDir/
+*.AppImage
+linuxdeploy*

@@ -9,13 +9,13 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "" "onenode_autogen/timestamp" "custom" "onenode_autogen/deps"
-  "/home/dwaragesh/Documents/Projects/One-Node/filetransfer.cpp" "CMakeFiles/onenode.dir/filetransfer.cpp.o" "gcc" "CMakeFiles/onenode.dir/filetransfer.cpp.o.d"
-  "/home/dwaragesh/Documents/Projects/One-Node/main.cpp" "CMakeFiles/onenode.dir/main.cpp.o" "gcc" "CMakeFiles/onenode.dir/main.cpp.o.d"
-  "/home/dwaragesh/Documents/Projects/One-Node/mainwindow.cpp" "CMakeFiles/onenode.dir/mainwindow.cpp.o" "gcc" "CMakeFiles/onenode.dir/mainwindow.cpp.o.d"
-  "/home/dwaragesh/Documents/Projects/One-Node/mdnsadvertiser.cpp" "CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o" "gcc" "CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o.d"
-  "/home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/EWIEGA46WW/qrc_resources.cpp" "CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o" "gcc" "CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o.d"
+  "/home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp" "CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o" "gcc" "CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o.d"
   "/home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/mocs_compilation.cpp" "CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.o" "gcc" "CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.o.d"
-  "/home/dwaragesh/Documents/Projects/One-Node/pairingserver.cpp" "CMakeFiles/onenode.dir/pairingserver.cpp.o" "gcc" "CMakeFiles/onenode.dir/pairingserver.cpp.o.d"
+  "/home/dwaragesh/Documents/Projects/One-Node/src/filetransfer.cpp" "CMakeFiles/onenode.dir/src/filetransfer.cpp.o" "gcc" "CMakeFiles/onenode.dir/src/filetransfer.cpp.o.d"
+  "/home/dwaragesh/Documents/Projects/One-Node/src/main.cpp" "CMakeFiles/onenode.dir/src/main.cpp.o" "gcc" "CMakeFiles/onenode.dir/src/main.cpp.o.d"
+  "/home/dwaragesh/Documents/Projects/One-Node/src/mainwindow.cpp" "CMakeFiles/onenode.dir/src/mainwindow.cpp.o" "gcc" "CMakeFiles/onenode.dir/src/mainwindow.cpp.o.d"
+  "/home/dwaragesh/Documents/Projects/One-Node/src/mdnsadvertiser.cpp" "CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o" "gcc" "CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o.d"
+  "/home/dwaragesh/Documents/Projects/One-Node/src/pairingserver.cpp" "CMakeFiles/onenode.dir/src/pairingserver.cpp.o" "gcc" "CMakeFiles/onenode.dir/src/pairingserver.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

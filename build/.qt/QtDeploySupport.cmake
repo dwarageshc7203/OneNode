@@ -29,7 +29,7 @@ set(__QT_DEPLOY_IMPL_DIR "/home/dwaragesh/Documents/Projects/One-Node/build/.qt"
 set(__QT_DEPLOY_VERBOSE "")
 set(__QT_CMAKE_EXPORT_NAMESPACE "Qt6")
 set(__QT_DEPLOY_GENERATOR_IS_MULTI_CONFIG "0")
-set(__QT_DEPLOY_ACTIVE_CONFIG "Release")
+set(__QT_DEPLOY_ACTIVE_CONFIG "")
 set(__QT_NO_CREATE_VERSIONLESS_FUNCTIONS "")
 set(__QT_DEFAULT_MAJOR_VERSION "6")
 

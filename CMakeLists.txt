@@ -7,12 +7,12 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(AVAHI REQUIRED avahi-client)
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Gui)
 add_executable(onenode
-    main.cpp
-    mainwindow.cpp
-    mdnsadvertiser.cpp
-    pairingserver.cpp
-    filetransfer.cpp
-    resources.qrc
+    src/main.cpp
+    src/mainwindow.cpp
+    src/mdnsadvertiser.cpp
+    src/pairingserver.cpp
+    src/filetransfer.cpp
+    resources/resources.qrc
 )
-target_include_directories(onenode PRIVATE ${AVAHI_INCLUDE_DIRS})
+target_include_directories(onenode PRIVATE src ${AVAHI_INCLUDE_DIRS})
 target_link_libraries(onenode Qt6::Core Qt6::Widgets Qt6::Network Qt6::Gui ${AVAHI_LIBRARIES})

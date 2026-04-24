@@ -72,15 +72,15 @@ include CMakeFiles/onenode.dir/flags.make
 onenode_autogen/timestamp: /usr/lib/qt6/libexec/moc
 onenode_autogen/timestamp: CMakeFiles/onenode.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic MOC for target onenode"
-	/usr/bin/cmake -E cmake_autogen /home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/onenode_autogen.dir/AutogenInfo.json Release
+	/usr/bin/cmake -E cmake_autogen /home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/onenode_autogen.dir/AutogenInfo.json ""
 	/usr/bin/cmake -E touch /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/timestamp
 
-onenode_autogen/EWIEGA46WW/qrc_resources.cpp: /home/dwaragesh/Documents/Projects/One-Node/resources.qrc
-onenode_autogen/EWIEGA46WW/qrc_resources.cpp: CMakeFiles/onenode_autogen.dir/AutoRcc_resources_EWIEGA46WW_Info.json
-onenode_autogen/EWIEGA46WW/qrc_resources.cpp: /home/dwaragesh/Documents/Projects/One-Node/icon.png
-onenode_autogen/EWIEGA46WW/qrc_resources.cpp: /usr/lib/qt6/libexec/rcc
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Automatic RCC for resources.qrc"
-	/usr/bin/cmake -E cmake_autorcc /home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/onenode_autogen.dir/AutoRcc_resources_EWIEGA46WW_Info.json Release
+onenode_autogen/3YJK5W5UP7/qrc_resources.cpp: /home/dwaragesh/Documents/Projects/One-Node/resources/resources.qrc
+onenode_autogen/3YJK5W5UP7/qrc_resources.cpp: CMakeFiles/onenode_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Info.json
+onenode_autogen/3YJK5W5UP7/qrc_resources.cpp: /home/dwaragesh/Documents/Projects/One-Node/resources/icon.png
+onenode_autogen/3YJK5W5UP7/qrc_resources.cpp: /usr/lib/qt6/libexec/rcc
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Automatic RCC for resources/resources.qrc"
+	/usr/bin/cmake -E cmake_autorcc /home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/onenode_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Info.json 
 
 CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.o: CMakeFiles/onenode.dir/flags.make
 CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.o: onenode_autogen/mocs_compilation.cpp
@@ -96,110 +96,110 @@ CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/mocs_compilation.cpp -o CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.s
 
-CMakeFiles/onenode.dir/main.cpp.o: CMakeFiles/onenode.dir/flags.make
-CMakeFiles/onenode.dir/main.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/main.cpp
-CMakeFiles/onenode.dir/main.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/onenode.dir/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/main.cpp.o -MF CMakeFiles/onenode.dir/main.cpp.o.d -o CMakeFiles/onenode.dir/main.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/main.cpp
+CMakeFiles/onenode.dir/src/main.cpp.o: CMakeFiles/onenode.dir/flags.make
+CMakeFiles/onenode.dir/src/main.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/src/main.cpp
+CMakeFiles/onenode.dir/src/main.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/onenode.dir/src/main.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/src/main.cpp.o -MF CMakeFiles/onenode.dir/src/main.cpp.o.d -o CMakeFiles/onenode.dir/src/main.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/src/main.cpp
 
-CMakeFiles/onenode.dir/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/main.cpp > CMakeFiles/onenode.dir/main.cpp.i
+CMakeFiles/onenode.dir/src/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/src/main.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/src/main.cpp > CMakeFiles/onenode.dir/src/main.cpp.i
 
-CMakeFiles/onenode.dir/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/main.cpp -o CMakeFiles/onenode.dir/main.cpp.s
+CMakeFiles/onenode.dir/src/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/src/main.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/src/main.cpp -o CMakeFiles/onenode.dir/src/main.cpp.s
 
-CMakeFiles/onenode.dir/mainwindow.cpp.o: CMakeFiles/onenode.dir/flags.make
-CMakeFiles/onenode.dir/mainwindow.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/mainwindow.cpp
-CMakeFiles/onenode.dir/mainwindow.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/onenode.dir/mainwindow.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/mainwindow.cpp.o -MF CMakeFiles/onenode.dir/mainwindow.cpp.o.d -o CMakeFiles/onenode.dir/mainwindow.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/mainwindow.cpp
+CMakeFiles/onenode.dir/src/mainwindow.cpp.o: CMakeFiles/onenode.dir/flags.make
+CMakeFiles/onenode.dir/src/mainwindow.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/src/mainwindow.cpp
+CMakeFiles/onenode.dir/src/mainwindow.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/onenode.dir/src/mainwindow.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/src/mainwindow.cpp.o -MF CMakeFiles/onenode.dir/src/mainwindow.cpp.o.d -o CMakeFiles/onenode.dir/src/mainwindow.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/src/mainwindow.cpp
 
-CMakeFiles/onenode.dir/mainwindow.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/mainwindow.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/mainwindow.cpp > CMakeFiles/onenode.dir/mainwindow.cpp.i
+CMakeFiles/onenode.dir/src/mainwindow.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/src/mainwindow.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/src/mainwindow.cpp > CMakeFiles/onenode.dir/src/mainwindow.cpp.i
 
-CMakeFiles/onenode.dir/mainwindow.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/mainwindow.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/mainwindow.cpp -o CMakeFiles/onenode.dir/mainwindow.cpp.s
+CMakeFiles/onenode.dir/src/mainwindow.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/src/mainwindow.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/src/mainwindow.cpp -o CMakeFiles/onenode.dir/src/mainwindow.cpp.s
 
-CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o: CMakeFiles/onenode.dir/flags.make
-CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/mdnsadvertiser.cpp
-CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o -MF CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o.d -o CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/mdnsadvertiser.cpp
+CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o: CMakeFiles/onenode.dir/flags.make
+CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/src/mdnsadvertiser.cpp
+CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o -MF CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o.d -o CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/src/mdnsadvertiser.cpp
 
-CMakeFiles/onenode.dir/mdnsadvertiser.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/mdnsadvertiser.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/mdnsadvertiser.cpp > CMakeFiles/onenode.dir/mdnsadvertiser.cpp.i
+CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/src/mdnsadvertiser.cpp > CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.i
 
-CMakeFiles/onenode.dir/mdnsadvertiser.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/mdnsadvertiser.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/mdnsadvertiser.cpp -o CMakeFiles/onenode.dir/mdnsadvertiser.cpp.s
+CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/src/mdnsadvertiser.cpp -o CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.s
 
-CMakeFiles/onenode.dir/pairingserver.cpp.o: CMakeFiles/onenode.dir/flags.make
-CMakeFiles/onenode.dir/pairingserver.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/pairingserver.cpp
-CMakeFiles/onenode.dir/pairingserver.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/onenode.dir/pairingserver.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/pairingserver.cpp.o -MF CMakeFiles/onenode.dir/pairingserver.cpp.o.d -o CMakeFiles/onenode.dir/pairingserver.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/pairingserver.cpp
+CMakeFiles/onenode.dir/src/pairingserver.cpp.o: CMakeFiles/onenode.dir/flags.make
+CMakeFiles/onenode.dir/src/pairingserver.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/src/pairingserver.cpp
+CMakeFiles/onenode.dir/src/pairingserver.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/onenode.dir/src/pairingserver.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/src/pairingserver.cpp.o -MF CMakeFiles/onenode.dir/src/pairingserver.cpp.o.d -o CMakeFiles/onenode.dir/src/pairingserver.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/src/pairingserver.cpp
 
-CMakeFiles/onenode.dir/pairingserver.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/pairingserver.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/pairingserver.cpp > CMakeFiles/onenode.dir/pairingserver.cpp.i
+CMakeFiles/onenode.dir/src/pairingserver.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/src/pairingserver.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/src/pairingserver.cpp > CMakeFiles/onenode.dir/src/pairingserver.cpp.i
 
-CMakeFiles/onenode.dir/pairingserver.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/pairingserver.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/pairingserver.cpp -o CMakeFiles/onenode.dir/pairingserver.cpp.s
+CMakeFiles/onenode.dir/src/pairingserver.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/src/pairingserver.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/src/pairingserver.cpp -o CMakeFiles/onenode.dir/src/pairingserver.cpp.s
 
-CMakeFiles/onenode.dir/filetransfer.cpp.o: CMakeFiles/onenode.dir/flags.make
-CMakeFiles/onenode.dir/filetransfer.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/filetransfer.cpp
-CMakeFiles/onenode.dir/filetransfer.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/onenode.dir/filetransfer.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/filetransfer.cpp.o -MF CMakeFiles/onenode.dir/filetransfer.cpp.o.d -o CMakeFiles/onenode.dir/filetransfer.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/filetransfer.cpp
+CMakeFiles/onenode.dir/src/filetransfer.cpp.o: CMakeFiles/onenode.dir/flags.make
+CMakeFiles/onenode.dir/src/filetransfer.cpp.o: /home/dwaragesh/Documents/Projects/One-Node/src/filetransfer.cpp
+CMakeFiles/onenode.dir/src/filetransfer.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/onenode.dir/src/filetransfer.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/src/filetransfer.cpp.o -MF CMakeFiles/onenode.dir/src/filetransfer.cpp.o.d -o CMakeFiles/onenode.dir/src/filetransfer.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/src/filetransfer.cpp
 
-CMakeFiles/onenode.dir/filetransfer.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/filetransfer.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/filetransfer.cpp > CMakeFiles/onenode.dir/filetransfer.cpp.i
+CMakeFiles/onenode.dir/src/filetransfer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/src/filetransfer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/src/filetransfer.cpp > CMakeFiles/onenode.dir/src/filetransfer.cpp.i
 
-CMakeFiles/onenode.dir/filetransfer.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/filetransfer.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/filetransfer.cpp -o CMakeFiles/onenode.dir/filetransfer.cpp.s
+CMakeFiles/onenode.dir/src/filetransfer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/src/filetransfer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/src/filetransfer.cpp -o CMakeFiles/onenode.dir/src/filetransfer.cpp.s
 
-CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o: CMakeFiles/onenode.dir/flags.make
-CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o: onenode_autogen/EWIEGA46WW/qrc_resources.cpp
-CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o -MF CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o.d -o CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/EWIEGA46WW/qrc_resources.cpp
+CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o: CMakeFiles/onenode.dir/flags.make
+CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o: onenode_autogen/3YJK5W5UP7/qrc_resources.cpp
+CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o: CMakeFiles/onenode.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o -MF CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o.d -o CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o -c /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp
 
-CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/EWIEGA46WW/qrc_resources.cpp > CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.i
+CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp > CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.i
 
-CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/EWIEGA46WW/qrc_resources.cpp -o CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.s
+CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp -o CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.s
 
 # Object files for target onenode
 onenode_OBJECTS = \
 "CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.o" \
-"CMakeFiles/onenode.dir/main.cpp.o" \
-"CMakeFiles/onenode.dir/mainwindow.cpp.o" \
-"CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o" \
-"CMakeFiles/onenode.dir/pairingserver.cpp.o" \
-"CMakeFiles/onenode.dir/filetransfer.cpp.o" \
-"CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o"
+"CMakeFiles/onenode.dir/src/main.cpp.o" \
+"CMakeFiles/onenode.dir/src/mainwindow.cpp.o" \
+"CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o" \
+"CMakeFiles/onenode.dir/src/pairingserver.cpp.o" \
+"CMakeFiles/onenode.dir/src/filetransfer.cpp.o" \
+"CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o"
 
 # External object files for target onenode
 onenode_EXTERNAL_OBJECTS =
 
 onenode: CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.o
-onenode: CMakeFiles/onenode.dir/main.cpp.o
-onenode: CMakeFiles/onenode.dir/mainwindow.cpp.o
-onenode: CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o
-onenode: CMakeFiles/onenode.dir/pairingserver.cpp.o
-onenode: CMakeFiles/onenode.dir/filetransfer.cpp.o
-onenode: CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o
+onenode: CMakeFiles/onenode.dir/src/main.cpp.o
+onenode: CMakeFiles/onenode.dir/src/mainwindow.cpp.o
+onenode: CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o
+onenode: CMakeFiles/onenode.dir/src/pairingserver.cpp.o
+onenode: CMakeFiles/onenode.dir/src/filetransfer.cpp.o
+onenode: CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o
 onenode: CMakeFiles/onenode.dir/build.make
 onenode: /usr/lib/x86_64-linux-gnu/libQt6Widgets.so.6.4.2
 onenode: /usr/lib/x86_64-linux-gnu/libQt6Network.so.6.4.2
@@ -219,7 +219,7 @@ CMakeFiles/onenode.dir/clean:
 	$(CMAKE_COMMAND) -P CMakeFiles/onenode.dir/cmake_clean.cmake
 .PHONY : CMakeFiles/onenode.dir/clean
 
-CMakeFiles/onenode.dir/depend: onenode_autogen/EWIEGA46WW/qrc_resources.cpp
+CMakeFiles/onenode.dir/depend: onenode_autogen/3YJK5W5UP7/qrc_resources.cpp
 CMakeFiles/onenode.dir/depend: onenode_autogen/timestamp
 	cd /home/dwaragesh/Documents/Projects/One-Node/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dwaragesh/Documents/Projects/One-Node /home/dwaragesh/Documents/Projects/One-Node /home/dwaragesh/Documents/Projects/One-Node/build /home/dwaragesh/Documents/Projects/One-Node/build /home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/onenode.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/onenode.dir/depend

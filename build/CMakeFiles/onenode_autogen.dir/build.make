@@ -71,7 +71,7 @@ CMakeFiles/onenode_autogen: onenode_autogen/timestamp
 onenode_autogen/timestamp: /usr/lib/qt6/libexec/moc
 onenode_autogen/timestamp: CMakeFiles/onenode_autogen.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic MOC for target onenode"
-	/usr/bin/cmake -E cmake_autogen /home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/onenode_autogen.dir/AutogenInfo.json Release
+	/usr/bin/cmake -E cmake_autogen /home/dwaragesh/Documents/Projects/One-Node/build/CMakeFiles/onenode_autogen.dir/AutogenInfo.json ""
 	/usr/bin/cmake -E touch /home/dwaragesh/Documents/Projects/One-Node/build/onenode_autogen/timestamp
 
 onenode_autogen: CMakeFiles/onenode_autogen

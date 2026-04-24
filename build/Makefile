@@ -155,125 +155,29 @@ onenode_autogen/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode_autogen.dir/build.make CMakeFiles/onenode_autogen.dir/build
 .PHONY : onenode_autogen/fast
 
-filetransfer.o: filetransfer.cpp.o
-.PHONY : filetransfer.o
+onenode_autogen/3YJK5W5UP7/qrc_resources.o: onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o
+.PHONY : onenode_autogen/3YJK5W5UP7/qrc_resources.o
 
 # target to build an object file
-filetransfer.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/filetransfer.cpp.o
-.PHONY : filetransfer.cpp.o
+onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o
+.PHONY : onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.o
 
-filetransfer.i: filetransfer.cpp.i
-.PHONY : filetransfer.i
-
-# target to preprocess a source file
-filetransfer.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/filetransfer.cpp.i
-.PHONY : filetransfer.cpp.i
-
-filetransfer.s: filetransfer.cpp.s
-.PHONY : filetransfer.s
-
-# target to generate assembly for a file
-filetransfer.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/filetransfer.cpp.s
-.PHONY : filetransfer.cpp.s
-
-main.o: main.cpp.o
-.PHONY : main.o
-
-# target to build an object file
-main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/main.cpp.o
-.PHONY : main.cpp.o
-
-main.i: main.cpp.i
-.PHONY : main.i
+onenode_autogen/3YJK5W5UP7/qrc_resources.i: onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.i
+.PHONY : onenode_autogen/3YJK5W5UP7/qrc_resources.i
 
 # target to preprocess a source file
-main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/main.cpp.i
-.PHONY : main.cpp.i
+onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.i
+.PHONY : onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.i
 
-main.s: main.cpp.s
-.PHONY : main.s
-
-# target to generate assembly for a file
-main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/main.cpp.s
-.PHONY : main.cpp.s
-
-mainwindow.o: mainwindow.cpp.o
-.PHONY : mainwindow.o
-
-# target to build an object file
-mainwindow.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/mainwindow.cpp.o
-.PHONY : mainwindow.cpp.o
-
-mainwindow.i: mainwindow.cpp.i
-.PHONY : mainwindow.i
-
-# target to preprocess a source file
-mainwindow.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/mainwindow.cpp.i
-.PHONY : mainwindow.cpp.i
-
-mainwindow.s: mainwindow.cpp.s
-.PHONY : mainwindow.s
+onenode_autogen/3YJK5W5UP7/qrc_resources.s: onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.s
+.PHONY : onenode_autogen/3YJK5W5UP7/qrc_resources.s
 
 # target to generate assembly for a file
-mainwindow.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/mainwindow.cpp.s
-.PHONY : mainwindow.cpp.s
-
-mdnsadvertiser.o: mdnsadvertiser.cpp.o
-.PHONY : mdnsadvertiser.o
-
-# target to build an object file
-mdnsadvertiser.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/mdnsadvertiser.cpp.o
-.PHONY : mdnsadvertiser.cpp.o
-
-mdnsadvertiser.i: mdnsadvertiser.cpp.i
-.PHONY : mdnsadvertiser.i
-
-# target to preprocess a source file
-mdnsadvertiser.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/mdnsadvertiser.cpp.i
-.PHONY : mdnsadvertiser.cpp.i
-
-mdnsadvertiser.s: mdnsadvertiser.cpp.s
-.PHONY : mdnsadvertiser.s
-
-# target to generate assembly for a file
-mdnsadvertiser.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/mdnsadvertiser.cpp.s
-.PHONY : mdnsadvertiser.cpp.s
-
-onenode_autogen/EWIEGA46WW/qrc_resources.o: onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o
-.PHONY : onenode_autogen/EWIEGA46WW/qrc_resources.o
-
-# target to build an object file
-onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o
-.PHONY : onenode_autogen/EWIEGA46WW/qrc_resources.cpp.o
-
-onenode_autogen/EWIEGA46WW/qrc_resources.i: onenode_autogen/EWIEGA46WW/qrc_resources.cpp.i
-.PHONY : onenode_autogen/EWIEGA46WW/qrc_resources.i
-
-# target to preprocess a source file
-onenode_autogen/EWIEGA46WW/qrc_resources.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.i
-.PHONY : onenode_autogen/EWIEGA46WW/qrc_resources.cpp.i
-
-onenode_autogen/EWIEGA46WW/qrc_resources.s: onenode_autogen/EWIEGA46WW/qrc_resources.cpp.s
-.PHONY : onenode_autogen/EWIEGA46WW/qrc_resources.s
-
-# target to generate assembly for a file
-onenode_autogen/EWIEGA46WW/qrc_resources.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/onenode_autogen/EWIEGA46WW/qrc_resources.cpp.s
-.PHONY : onenode_autogen/EWIEGA46WW/qrc_resources.cpp.s
+onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.s
+.PHONY : onenode_autogen/3YJK5W5UP7/qrc_resources.cpp.s
 
 onenode_autogen/mocs_compilation.o: onenode_autogen/mocs_compilation.cpp.o
 .PHONY : onenode_autogen/mocs_compilation.o
@@ -299,29 +203,125 @@ onenode_autogen/mocs_compilation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/onenode_autogen/mocs_compilation.cpp.s
 .PHONY : onenode_autogen/mocs_compilation.cpp.s
 
-pairingserver.o: pairingserver.cpp.o
-.PHONY : pairingserver.o
+src/filetransfer.o: src/filetransfer.cpp.o
+.PHONY : src/filetransfer.o
 
 # target to build an object file
-pairingserver.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/pairingserver.cpp.o
-.PHONY : pairingserver.cpp.o
+src/filetransfer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/filetransfer.cpp.o
+.PHONY : src/filetransfer.cpp.o
 
-pairingserver.i: pairingserver.cpp.i
-.PHONY : pairingserver.i
+src/filetransfer.i: src/filetransfer.cpp.i
+.PHONY : src/filetransfer.i
 
 # target to preprocess a source file
-pairingserver.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/pairingserver.cpp.i
-.PHONY : pairingserver.cpp.i
+src/filetransfer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/filetransfer.cpp.i
+.PHONY : src/filetransfer.cpp.i
 
-pairingserver.s: pairingserver.cpp.s
-.PHONY : pairingserver.s
+src/filetransfer.s: src/filetransfer.cpp.s
+.PHONY : src/filetransfer.s
 
 # target to generate assembly for a file
-pairingserver.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/pairingserver.cpp.s
-.PHONY : pairingserver.cpp.s
+src/filetransfer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/filetransfer.cpp.s
+.PHONY : src/filetransfer.cpp.s
+
+src/main.o: src/main.cpp.o
+.PHONY : src/main.o
+
+# target to build an object file
+src/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
+
+src/main.i: src/main.cpp.i
+.PHONY : src/main.i
+
+# target to preprocess a source file
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
+
+src/main.s: src/main.cpp.s
+.PHONY : src/main.s
+
+# target to generate assembly for a file
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
+
+src/mainwindow.o: src/mainwindow.cpp.o
+.PHONY : src/mainwindow.o
+
+# target to build an object file
+src/mainwindow.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/mainwindow.cpp.o
+.PHONY : src/mainwindow.cpp.o
+
+src/mainwindow.i: src/mainwindow.cpp.i
+.PHONY : src/mainwindow.i
+
+# target to preprocess a source file
+src/mainwindow.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/mainwindow.cpp.i
+.PHONY : src/mainwindow.cpp.i
+
+src/mainwindow.s: src/mainwindow.cpp.s
+.PHONY : src/mainwindow.s
+
+# target to generate assembly for a file
+src/mainwindow.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/mainwindow.cpp.s
+.PHONY : src/mainwindow.cpp.s
+
+src/mdnsadvertiser.o: src/mdnsadvertiser.cpp.o
+.PHONY : src/mdnsadvertiser.o
+
+# target to build an object file
+src/mdnsadvertiser.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.o
+.PHONY : src/mdnsadvertiser.cpp.o
+
+src/mdnsadvertiser.i: src/mdnsadvertiser.cpp.i
+.PHONY : src/mdnsadvertiser.i
+
+# target to preprocess a source file
+src/mdnsadvertiser.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.i
+.PHONY : src/mdnsadvertiser.cpp.i
+
+src/mdnsadvertiser.s: src/mdnsadvertiser.cpp.s
+.PHONY : src/mdnsadvertiser.s
+
+# target to generate assembly for a file
+src/mdnsadvertiser.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/mdnsadvertiser.cpp.s
+.PHONY : src/mdnsadvertiser.cpp.s
+
+src/pairingserver.o: src/pairingserver.cpp.o
+.PHONY : src/pairingserver.o
+
+# target to build an object file
+src/pairingserver.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/pairingserver.cpp.o
+.PHONY : src/pairingserver.cpp.o
+
+src/pairingserver.i: src/pairingserver.cpp.i
+.PHONY : src/pairingserver.i
+
+# target to preprocess a source file
+src/pairingserver.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/pairingserver.cpp.i
+.PHONY : src/pairingserver.cpp.i
+
+src/pairingserver.s: src/pairingserver.cpp.s
+.PHONY : src/pairingserver.s
+
+# target to generate assembly for a file
+src/pairingserver.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/onenode.dir/build.make CMakeFiles/onenode.dir/src/pairingserver.cpp.s
+.PHONY : src/pairingserver.cpp.s
 
 # Help Target
 help:
@@ -334,27 +334,27 @@ help:
 	@echo "... onenode_autogen"
 	@echo "... onenode_autogen_timestamp_deps"
 	@echo "... onenode"
-	@echo "... filetransfer.o"
-	@echo "... filetransfer.i"
-	@echo "... filetransfer.s"
-	@echo "... main.o"
-	@echo "... main.i"
-	@echo "... main.s"
-	@echo "... mainwindow.o"
-	@echo "... mainwindow.i"
-	@echo "... mainwindow.s"
-	@echo "... mdnsadvertiser.o"
-	@echo "... mdnsadvertiser.i"
-	@echo "... mdnsadvertiser.s"
-	@echo "... onenode_autogen/EWIEGA46WW/qrc_resources.o"
-	@echo "... onenode_autogen/EWIEGA46WW/qrc_resources.i"
-	@echo "... onenode_autogen/EWIEGA46WW/qrc_resources.s"
+	@echo "... onenode_autogen/3YJK5W5UP7/qrc_resources.o"
+	@echo "... onenode_autogen/3YJK5W5UP7/qrc_resources.i"
+	@echo "... onenode_autogen/3YJK5W5UP7/qrc_resources.s"
 	@echo "... onenode_autogen/mocs_compilation.o"
 	@echo "... onenode_autogen/mocs_compilation.i"
 	@echo "... onenode_autogen/mocs_compilation.s"
-	@echo "... pairingserver.o"
-	@echo "... pairingserver.i"
-	@echo "... pairingserver.s"
+	@echo "... src/filetransfer.o"
+	@echo "... src/filetransfer.i"
+	@echo "... src/filetransfer.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
+	@echo "... src/mainwindow.o"
+	@echo "... src/mainwindow.i"
+	@echo "... src/mainwindow.s"
+	@echo "... src/mdnsadvertiser.o"
+	@echo "... src/mdnsadvertiser.i"
+	@echo "... src/mdnsadvertiser.s"
+	@echo "... src/pairingserver.o"
+	@echo "... src/pairingserver.i"
+	@echo "... src/pairingserver.s"
 .PHONY : help
 
 

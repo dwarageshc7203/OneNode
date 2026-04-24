@@ -11,7 +11,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "CMakeFiles/3.28.3/CMakeCCompiler.cmake"
   "CMakeFiles/3.28.3/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.28.3/CMakeSystem.cmake"
-  "/home/dwaragesh/Documents/Projects/One-Node/resources.qrc"
+  "/home/dwaragesh/Documents/Projects/One-Node/resources/resources.qrc"
   "/usr/lib/x86_64-linux-gnu/cmake/Qt6/3rdparty/kwin/FindXKB.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/Qt6/FindWrapAtomic.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/Qt6/FindWrapOpenGL.cmake"
@@ -242,7 +242,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "CMakeFiles/3.28.3/CMakeCCompiler.cmake"
   "CMakeFiles/3.28.3/CMakeCXXCompiler.cmake"
   "CMakeFiles/onenode_autogen.dir/AutogenInfo.json"
-  "CMakeFiles/onenode_autogen.dir/AutoRcc_resources_EWIEGA46WW_Info.json"
+  "CMakeFiles/onenode_autogen.dir/AutoRcc_resources_3YJK5W5UP7_Info.json"
   ".qt/QtDeploySupport.cmake"
   "CMakeFiles/CMakeDirectoryInformation.cmake"
   )
