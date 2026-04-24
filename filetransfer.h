@@ -27,4 +27,6 @@ private:
     QString     fileName;
     qint64      fileSize;
     qint64      totalWritten;
+    bool        transferActive;
+    bool        transferCompleted;
 };
