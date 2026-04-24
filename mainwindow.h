@@ -56,6 +56,11 @@ private:
     QString generateCode();
     void applyCode(const QString &code);
     void showLinkedState(const QString &deviceName);
+    void startHeartbeat();
+    void stopHeartbeat();
+    void sendHeartbeatPing();
+    void markHeartbeatSuccess();
+    void markHeartbeatFailure();
     void processIncomingTransfer(QTcpSocket *socket);
     void cleanupIncomingTransfer(QTcpSocket *socket);
 
@@ -74,6 +79,10 @@ private:
     PairingServer  *pairingServer;
     FileTransfer   *fileTransfer;
     MdnsAdvertiser *mdnsAdvertiser;
+    QTimer         *heartbeatTimer;
+    int             pingFailures;
+    bool            heartbeatOnline;
+    bool            pingInFlight;
     QHash<QTcpSocket *, IncomingTransferState> incomingTransfers;
     int             secondsLeft;
     QString         currentCode;

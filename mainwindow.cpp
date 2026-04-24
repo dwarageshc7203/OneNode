@@ -41,7 +41,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     pairingServer  = new PairingServer(this);
     fileTransfer   = new FileTransfer(this);
     mdnsAdvertiser = new MdnsAdvertiser(this);
+    heartbeatTimer = new QTimer(this);
     desktopReceiverServer = nullptr;
+    pingFailures = 0;
+    heartbeatOnline = false;
+    pingInFlight = false;
 
     connect(countdownTimer, &QTimer::timeout,
             this, &MainWindow::onTickTimer);
@@ -53,6 +57,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             this, &MainWindow::onTransferDone);
     connect(fileTransfer, &FileTransfer::transferFailed,
             this, &MainWindow::onTransferFailed);
+    connect(heartbeatTimer, &QTimer::timeout,
+            this, &MainWindow::sendHeartbeatPing);
+    heartbeatTimer->setInterval(3000);
 
     setupUI();
     setupTray();
@@ -143,6 +150,7 @@ void MainWindow::onTickTimer() {
 }
 
 void MainWindow::onRegenerateClicked() {
+    stopHeartbeat();
     linkedLabel->clear();
     trayIcon->setToolTip("One Node — not linked");
     applyCode(generateCode());
@@ -171,9 +179,11 @@ void MainWindow::showLinkedState(const QString &deviceName) {
     linkedLabel->setText("Linked to: " + deviceName);
     regenerateBtn->setText("Unlink");
     trayIcon->setToolTip("One Node — linked to " + deviceName);
+    startHeartbeat();
 
     disconnect(regenerateBtn, &QPushButton::clicked, nullptr, nullptr);
     connect(regenerateBtn, &QPushButton::clicked, this, [this]() {
+        stopHeartbeat();
         settings->remove("device_name");
         settings->remove("pairing_token");
         settings->remove("device_ip");
@@ -198,30 +208,99 @@ void MainWindow::onTransferFailed(const QString &reason) {
     statusLabel->setText("❌  Failed: " + reason);
     trayIcon->showMessage("One Node", "Transfer failed — device may be offline",
                           QSystemTrayIcon::Warning, 3000);
+}
 
-    if (reason.contains("Connection", Qt::CaseInsensitive)
-        || reason.contains("refused", Qt::CaseInsensitive)
-        || reason.contains("timed out", Qt::CaseInsensitive)
-        || reason.contains("error", Qt::CaseInsensitive)) {
-        settings->remove("device_name");
-        settings->remove("pairing_token");
-        settings->remove("device_ip");
-        settings->sync();
-
-        QTimer::singleShot(2000, this, [this]() {
-            codeLabel->setText("--- ---");
-            timerLabel->setText("");
-            linkedLabel->setText("");
-            regenerateBtn->setText("Regenerate");
-            trayIcon->setToolTip("One Node — not linked");
-
-            disconnect(regenerateBtn, &QPushButton::clicked, nullptr, nullptr);
-            connect(regenerateBtn, &QPushButton::clicked,
-                    this, &MainWindow::onRegenerateClicked);
-
-            onRegenerateClicked();
-        });
+void MainWindow::startHeartbeat() {
+    pingFailures = 0;
+    heartbeatOnline = true;
+    pingInFlight = false;
+    if (!heartbeatTimer->isActive()) {
+        heartbeatTimer->start();
     }
+    sendHeartbeatPing();
+}
+
+void MainWindow::stopHeartbeat() {
+    heartbeatTimer->stop();
+    pingFailures = 0;
+    heartbeatOnline = false;
+    pingInFlight = false;
+}
+
+void MainWindow::markHeartbeatSuccess() {
+    pingFailures = 0;
+    if (!heartbeatOnline) {
+        const QString deviceName = settings->value("device_name").toString();
+        statusLabel->setText("✅  Connected to " + deviceName);
+        trayIcon->setToolTip("One Node — linked to " + deviceName);
+        heartbeatOnline = true;
+    }
+}
+
+void MainWindow::markHeartbeatFailure() {
+    pingFailures++;
+    if (pingFailures >= 3 && heartbeatOnline) {
+        statusLabel->setText("⚠️  Device offline — retrying...");
+        trayIcon->setToolTip("One Node — device offline");
+        heartbeatOnline = false;
+    }
+}
+
+void MainWindow::sendHeartbeatPing() {
+    if (pingInFlight) {
+        return;
+    }
+    const QString peerIp = settings->value("device_ip").toString();
+    if (peerIp.isEmpty()) {
+        return;
+    }
+
+    pingInFlight = true;
+    QTcpSocket *socket = new QTcpSocket(this);
+    socket->setProperty("heartbeatHandled", false);
+
+    auto finishFailure = [this, socket]() {
+        if (socket->property("heartbeatHandled").toBool()) {
+            return;
+        }
+        socket->setProperty("heartbeatHandled", true);
+        pingInFlight = false;
+        markHeartbeatFailure();
+        socket->abort();
+        socket->deleteLater();
+    };
+
+    connect(socket, &QTcpSocket::connected, this, [socket]() {
+        socket->write("ping\n");
+        socket->flush();
+    });
+
+    connect(socket, &QTcpSocket::readyRead, this, [this, socket]() {
+        if (socket->property("heartbeatHandled").toBool()) {
+            return;
+        }
+        const QByteArray line = socket->readLine().trimmed();
+        if (line == "pong") {
+            socket->setProperty("heartbeatHandled", true);
+            pingInFlight = false;
+            markHeartbeatSuccess();
+            socket->disconnectFromHost();
+            socket->deleteLater();
+        }
+    });
+
+    connect(socket, &QAbstractSocket::errorOccurred, this, [finishFailure](QAbstractSocket::SocketError) {
+        finishFailure();
+    });
+
+    QTimer::singleShot(2000, socket, [finishFailure, socket]() {
+        if (socket->property("heartbeatHandled").toBool()) {
+            return;
+        }
+        finishFailure();
+    });
+
+    socket->connectToHost(QHostAddress(peerIp), 45681);
 }
 
 // ── UI Setup ───────────────────────────────────────────────────────────────

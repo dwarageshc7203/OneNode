@@ -21,6 +21,10 @@ void FileTransfer::sendFile(const QString &path, const QString &peerIp, int port
     fileName     = QFileInfo(path).fileName();
     totalWritten = 0;
 
+    if (socket->state() != QAbstractSocket::UnconnectedState) {
+        socket->abort();
+    }
+
     QFile f(filePath);
     if (!f.exists()) {
         emit transferFailed("File not found: " + fileName);
@@ -97,5 +101,6 @@ void FileTransfer::onBytesWritten(qint64 bytes) {
 
 void FileTransfer::onError(QAbstractSocket::SocketError error) {
     Q_UNUSED(error)
+    socket->abort();
     emit transferFailed("Connection error: " + socket->errorString());
 }
