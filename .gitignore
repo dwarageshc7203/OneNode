@@ -1,0 +1,23 @@
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+
+# Ignore the manually downloaded gradle zip and unzipped folder
+gradle-8.5-bin.zip
+gradle-8.5/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# OS specific
+.DS_Store
+Thumbs.db
