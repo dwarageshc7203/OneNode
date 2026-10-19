@@ -24,8 +24,22 @@ void CoreBridge :: stopListening()
 void CoreBridge :: handleNewConnection()
 {
     QTcpSocket *client = server -> nextPendingConnection();
+
+    // Checking null pointer when no connection available
+    if (!client) {
+        return;
+    }
+
+    // Connect handle
     qDebug() << "A client has connected: " << client -> peerAddress().toString();
+
     connect(client, &QTcpSocket :: readyRead, this, &CoreBridge :: readClientData);
+
+    // Disconnect handle
+    connect (client, &QTcpSocket :: disconnected, this, [client] {
+        qDebug() << "The client has disconnected: " << client -> peerAddress().toString();
+        client -> deleteLater();
+    });
 }
 
 void CoreBridge :: readClientData()
