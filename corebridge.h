@@ -3,6 +3,11 @@
 
 #include <QObject>
 #include <QTcpServer>
+#include <QTcpSocket>
+#include <QList>
+#include <QFile>
+#include <QJsonObject>
+#include <QByteArray>
 
 class CoreBridge : public QObject {
 
@@ -14,7 +19,19 @@ public:
     Q_INVOKABLE void stopListening();
 
 private:
-    QTcpServer *server;
+
+    // Objects and variables
+
+    QTcpServer *server; // The engine
+    QList <QTcpSocket *> clients; // List of clients saved in memory
+    QFile *incomingFile = nullptr; // Points to the file or image sent as an object
+    qint64 expectedSize = 0; // Size of the image or file before sending
+    qint64 receivedSize = 0; // Size of the image after receiving
+    QByteArray headerBuffer; // Stores the bytes of Header length prefix and the JSON header
+    qint64 expectedHeaderSize = 0; // Stores the size of the JSON header
+
+    // Methods
+
     void handleNewConnection();
     void readClientData();
 };

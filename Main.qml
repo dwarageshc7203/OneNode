@@ -15,7 +15,6 @@ Window {
     Button {
         width: 100;
         height: 100;
-        // color: yellow;
         text: "Start OneNode";
         anchors.centerIn: parent;
         onClicked: {
@@ -28,6 +27,7 @@ Window {
     Button {
         text: "Start Listening"
         onClicked: {
+            text: "Server Started";
             let success = core.startListening();
             console.log("Server started: ", success);
         }
