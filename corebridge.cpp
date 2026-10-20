@@ -132,14 +132,15 @@ void CoreBridge :: readClientData()
         QString fileName = metaData.value("filename").toString();
         qint64 fileSize = metaData.value("size").toInteger();
 
-        // Validating fileName
+        // Validating fileName and preventing path traversal
+        // We just want the fileName, do
 
         QFileInfo fileInfo(fileName);
 
         if (
             fileInfo.fileName() != fileName ||
-            fileName == "." ||
-            fileName == ".."
+            fileName == "." || // rejecting special directory name - . -> current directory
+            fileName == ".." // rejecting special directory name - .. -> parent directory
             ) {
             qDebug() << "Invalid fileName: " << fileName;
             client -> disconnectFromHost();
@@ -168,7 +169,7 @@ void CoreBridge :: readClientData()
         // Writing the file
         QFile *incomingFile = new QFile(savedPath);
 
-        if(incomingFile -> open(QIODevice :: WriteOnly)) {
+        if(!incomingFile -> open(QIODevice :: WriteOnly)) {
             qDebug() << "Destination file couldn't be accessed: " << incomingFile -> errorString();
             delete incomingFile;
             client -> disconnectFromHost();
