@@ -61,10 +61,10 @@ void CoreBridge :: readClientData()
         return;
     }
 
-    QByteArray data = client->readAll();
+    QByteArray data = client -> readAll();
     qDebug() << "Client received: " << data;
 
-    headerBuffer.append(client -> readAll());
+    headerBuffer.append(data);
 
     if (expectedHeaderSize == 0 && headerBuffer.size() >= 4)
     {
@@ -148,7 +148,7 @@ void CoreBridge :: readClientData()
         }
 
         // Initialization of Directory to save files
-        QString destination = QDir :: homePath() + "/OneNode";
+        QString destination = QDir :: homePath() + "/Downloads/OneNode";
 
         QDir dir;
 
@@ -167,16 +167,22 @@ void CoreBridge :: readClientData()
         qDebug() << "Saved path: " << savedPath;
 
         // Writing the file
-        QFile *incomingFile = new QFile(savedPath);
-
+        incomingFile = new QFile(savedPath);
         if(!incomingFile -> open(QIODevice :: WriteOnly)) {
             qDebug() << "Destination file couldn't be accessed: " << incomingFile -> errorString();
+
             delete incomingFile;
+            incomingFile = nullptr;
             client -> disconnectFromHost();
             return;
         }
 
         qDebug() << "Destination file accessed successfully";
+
+        expectedSize = fileSize;
+        receivedSize = 0;
+
+        qDebug() << "Expected file size: " << expectedSize;
 
 
     }
