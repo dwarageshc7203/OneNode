@@ -89,8 +89,20 @@ void CoreBridge :: readClientData()
             qDebug() << "Expected Size: " << expectedSize;
             qDebug() << "received Size: " << receivedSize;
 
-            return;
+            if (receivedSize == expectedSize) { // after fully receiving the file
+                incomingFile -> close();
+                delete(incomingFile);
+                incomingFile = nullptr;
+
+                expectedSize = 0;
+                receivedSize = 0;
+                expectedHeaderSize = 0;
+                receivingFile = false;
+
+                qDebug() << "File received successfully" ;
+            }
         }
+        return;
     }
 
     if (expectedHeaderSize == 0 && headerBuffer.size() >= 4)
@@ -208,6 +220,7 @@ void CoreBridge :: readClientData()
 
         expectedSize = fileSize;
         receivedSize = 0;
+        receivingFile = true; // Initiate the file writing process
 
         qDebug() << "Expected file size: " << expectedSize;
 
