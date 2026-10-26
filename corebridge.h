@@ -28,7 +28,7 @@ private:
     qint64 expectedSize = 0; // Size of the image or file before sending
     qint64 receivedSize = 0; // Size of the image after receiving
     QByteArray headerBuffer; // Stores the bytes of Header length prefix and the JSON header
-    qint64 expectedHeaderSize = 0; // Stores the size of the JSON header
+    qint32 expectedHeaderSize = 0; // Stores the size of the JSON header
     bool receivingFile = false;
 
     // Methods
