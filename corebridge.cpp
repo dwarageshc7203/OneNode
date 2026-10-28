@@ -66,42 +66,9 @@ void CoreBridge :: readClientData()
 
     headerBuffer.append(data);
 
-    // File Writing Process
-
+    // File data processing from buffer and writing
     if (receivingFile) {
-        qint64 bytesToWrite = qMin (static_cast<qint64>(headerBuffer.size()), (expectedSize - receivedSize)); // choosing if the entire buffer can be written or it should be cropped - that's why we use the Min function
-
-        if (bytesToWrite > 0) {
-            qint64 bytesWritten = incomingFile -> write( // handles fire writing errors between request of bytes and writing of bytes
-                headerBuffer.constData(), // constData provides a pointer to access bytes in the buffer
-                bytesToWrite
-                );
-
-            if (bytesWritten < 0) { // handling when writing of bytes fails (even when expectedSize == receivedSize)
-                qDebug() << "File write failed: " << incomingFile -> errorString();
-                client -> disconnectFromHost();
-                return;
-            }
-
-            receivedSize += bytesWritten;
-            headerBuffer.remove(0, bytesWritten);
-
-            qDebug() << "Expected Size: " << expectedSize;
-            qDebug() << "received Size: " << receivedSize;
-
-            if (receivedSize == expectedSize) { // after fully receiving the file
-                incomingFile -> close();
-                delete(incomingFile);
-                incomingFile = nullptr;
-
-                expectedSize = 0;
-                receivedSize = 0;
-                expectedHeaderSize = 0;
-                receivingFile = false;
-
-                qDebug() << "File received successfully" ;
-            }
-        }
+        processFileData();
         return;
     }
 
@@ -224,13 +191,45 @@ void CoreBridge :: readClientData()
 
         qDebug() << "Expected file size: " << expectedSize;
 
-
+        processFileData();
     }
 }
 
 
+// File Data processing from Buffer and writing
+void CoreBridge :: processFileData()
+{
+    qint64 bytesToWrite = qMin (static_cast<qint64>(headerBuffer.size()), (expectedSize - receivedSize)); // choosing if the entire buffer can be written or it should be cropped - that's why we use the Min function
 
+    if (bytesToWrite > 0) {
+        qint64 bytesWritten = incomingFile -> write( // handles fire writing errors between request of bytes and writing of bytes
+            headerBuffer.constData(), // constData provides a pointer to access bytes in the buffer
+            bytesToWrite
+            );
 
+        if (bytesWritten < 0) { // handling when writing of bytes fails (even when expectedSize == receivedSize)
+            qDebug() << "File write failed: " << incomingFile -> errorString();
+            // client -> disconnectFromHost();
+            return;
+        }
 
+        receivedSize += bytesWritten;
+        headerBuffer.remove(0, bytesWritten);
 
+        qDebug() << "Expected Size: " << expectedSize;
+        qDebug() << "received Size: " << receivedSize;
 
+        if (receivedSize == expectedSize) { // after fully receiving the file
+            incomingFile -> close();
+            delete(incomingFile);
+            incomingFile = nullptr;
+
+            expectedSize = 0;
+            receivedSize = 0;
+            expectedHeaderSize = 0;
+            receivingFile = false;
+
+            qDebug() << "File received successfully" ;
+        }
+    }
+}

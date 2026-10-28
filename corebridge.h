@@ -35,6 +35,7 @@ private:
 
     void handleNewConnection();
     void readClientData();
+    void processFileData();
 };
 
 #endif // COREBRIDGE_H
