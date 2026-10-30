@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QJsonObject>
 #include <QByteArray>
+#include <QtEndian>
 
 class CoreBridge : public QObject {
 
@@ -28,14 +29,18 @@ private:
     qint64 expectedSize = 0; // Size of the image or file before sending
     qint64 receivedSize = 0; // Size of the image after receiving
     QByteArray headerBuffer; // Stores the bytes of Header length prefix and the JSON header
-    qint32 expectedHeaderSize = 0; // Stores the size of the JSON header
+    quint32 expectedHeaderSize = 0; // Stores the size of the JSON header
     bool receivingFile = false;
+    // Bookmark upon the received bytes instead of using lots of other variables as statuses
+    enum class State { AwaitPrefix, AwaitHeader, ReceiveBody};
+    State state = State :: AwaitPrefix;
 
     // Methods
 
     void handleNewConnection();
     void readClientData();
     void processFileData();
+    bool handlePrefix(QTcpSocket *client);
 };
 
 #endif // COREBRIDGE_H

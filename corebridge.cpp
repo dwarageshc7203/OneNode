@@ -55,7 +55,7 @@ void CoreBridge :: handleNewConnection()
 
 void CoreBridge :: readClientData()
 {
-    QTcpSocket *client = qobject_cast<QTcpSocket *>(sender ());
+    QTcpSocket *client = qobject_cast<QTcpSocket *>(sender());
 
     if (!client) {
         return;
@@ -232,4 +232,22 @@ void CoreBridge :: processFileData()
             qDebug() << "File received successfully" ;
         }
     }
+}
+
+bool CoreBridge :: handlePrefix(QTcpSocket *client)
+{
+    if (headerBuffer.size() < 4) {
+        return false;
+    }
+
+    expectedHeaderSize = qFromBigEndian<qint32>(headerBuffer.constData());
+
+    if (expectedHeaderSize == 0 || expectedHeaderSize > 16384) { // 16 KiB = 16384 -> standard norm; also protects unnecessary wait for large header sizes
+        qDebug() << "Invalid header size: " << expectedHeaderSize;
+        client -> disconnectFromHost();
+        return false;
+    }
+
+    state = State :: AwaitHeader;
+    return true;
 }
