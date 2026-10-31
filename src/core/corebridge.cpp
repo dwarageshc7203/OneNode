@@ -1,4 +1,6 @@
 #include "corebridge.h"
+#include "receivesession.h"
+
 #include <QTcpSocket>
 #include <QDebug>
 #include <QJsonDocument>
@@ -38,11 +40,12 @@ void CoreBridge :: handleNewConnection()
     }
 
     clients.append(client);
+    new ReceiveSession(client, this);
 
     // Connect handle
     qDebug() << "A client has connected: " << client -> peerAddress().toString();
 
-    connect(client, &QTcpSocket :: readyRead, this, &CoreBridge :: readClientData);
+    // connect(client, &QTcpSocket :: readyRead, this, &CoreBridge :: readClientData);
 
     // Disconnect handle
     connect (client, &QTcpSocket :: disconnected, this, [this, client] {
@@ -161,7 +164,7 @@ bool CoreBridge :: handleHeader(QTcpSocket *client)
     qDebug() << "Saved path: " << savedPath;
 
     // creating the file (empty)
-    incomingFile = new QFile(savedPath);
+    incomingFile = new QFile(savedPath); // there is a potential data leak - no delete method anywhere
     if(!incomingFile -> open(QIODevice :: WriteOnly)) {
         qDebug() << "Destination file couldn't be accessed: " << incomingFile -> errorString();
 
@@ -177,7 +180,7 @@ bool CoreBridge :: handleHeader(QTcpSocket *client)
     receivedSize = 0;
     state = State :: ReceiveBody; // Change the value of state to ReceiveBody
 
-    qDebug() << "Recevied " << fileName << " of size " << fileSize << " bytes";
+    qDebug() << "Recieving " << fileName << " of size " << fileSize << " bytes";
 
     return true;
 }
@@ -197,7 +200,7 @@ bool CoreBridge :: handleBody()
             return false;
         }
 
-        receivedSize += toWrite; // updating the written bytes
+        receivedSize += written; // updating the written bytes
         headerBuffer.remove(0,written);
     }
 

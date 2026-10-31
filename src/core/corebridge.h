@@ -32,7 +32,7 @@ private:
     quint32 expectedHeaderSize = 0; // Stores the size of the JSON header
     bool receivingFile = false;
     // Bookmark upon the received bytes instead of using lots of other variables as statuses
-    enum class State { AwaitPrefix, AwaitHeader, ReceiveBody};
+    enum class State { AwaitPrefix, AwaitHeader, ReceiveBody}; // enum with 3 states
     State state = State :: AwaitPrefix;
 
     // Methods
