@@ -39,10 +39,10 @@ private:
 
     void handleNewConnection();
     void readClientData();
-    void processFileData();
     bool handlePrefix(QTcpSocket *client);
     bool handleHeader(QTcpSocket *client);
     bool handleBody();
+    bool processBuffer(QTcpSocket *client);
     void finishFile();
 };
 

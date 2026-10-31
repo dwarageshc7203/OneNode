@@ -1,6 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include "corebridge.h"
+#include "core/corebridge.h"
 #include <QtQml>
 
 int main(int argc, char *argv[])

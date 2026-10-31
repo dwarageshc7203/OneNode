@@ -9,15 +9,15 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Network)
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(appOneNode
-    main.cpp
+    src/main.cpp
 )
 
 qt_add_qml_module(appOneNode
     URI OneNode
     QML_FILES
-        Main.qml
-        SOURCES corebridge.h
-        SOURCES corebridge.cpp
+        qml/Main.qml
+        SOURCES src/core/corebridge.h
+        SOURCES src/core/corebridge.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
