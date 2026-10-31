@@ -41,6 +41,9 @@ private:
     void readClientData();
     void processFileData();
     bool handlePrefix(QTcpSocket *client);
+    bool handleHeader(QTcpSocket *client);
+    bool handleBody();
+    void finishFile();
 };
 
 #endif // COREBRIDGE_H
