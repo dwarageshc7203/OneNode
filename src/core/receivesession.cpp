@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QString>
+#include <QJsonDocument>
 
 // Finding the valid filename for the arriving file
 static QString uniquePath(const QString &path)
@@ -113,6 +114,21 @@ bool ReceiveSession :: handleHeader()
 
     QJsonObject metaData = document.object(); // This stores the actual JSON header object
 
+    // Checking version number from the Protocol header field from the JSON header object
+    if (!metaData.value("v").isDouble() || metaData.value("v").toInt() != currentVersionNumber) {
+        qDebug() << "Unsupported protocol version. Current version is " << currentVersionNumber;
+        socket -> disconnectFromHost();
+        return false;
+    }
+
+    // Checking for unsupported "type" field
+    if (metaData.value("type").toString() != "file") { // for the upcoming version, will include checks to allow "copied text" or others ...
+        qDebug() << "Unsupported message type: " << metaData.value("type").toString();
+        socket -> disconnectFromHost();
+        return false;
+    }
+
+    // Checking filename and size from the JSON header object
     if (!metaData.value("filename").isString() || !metaData.value("size").isDouble()) {
         qDebug() << "Header is missing FileName or Size";
         socket -> disconnectFromHost();
@@ -141,7 +157,7 @@ bool ReceiveSession :: handleHeader()
         return false;
     }
 
-    qDebug() << "Session header is vallid";
+    qDebug() << "Session header is valid";
 
     // Initialization of Directory to save files
     QString destination = QDir :: homePath() + "/Downloads/OneNode";
@@ -180,7 +196,7 @@ bool ReceiveSession :: handleHeader()
     receivedSize = 0;
     state = State :: ReceiveBody; // Change the value of state to ReceiveBody
 
-    qDebug() << "Recieving " << fileName << " of size " << fileSize << " bytes";
+    qDebug() << "Receiving " << fileName << " of size " << fileSize << " bytes";
 
     return true;
 }
@@ -192,18 +208,21 @@ void ReceiveSession :: finishFile()
     delete incomingFile;
     incomingFile = nullptr;
 
-    if (!QFile::rename(partPath, finalPath)) {
-        qDebug() << "Could not rename " << partPath << " to " << finalPath;
-        socket -> disconnectFromHost();
-    }
-
-    qDebug() << "File renamed from " << partPath << " to " << finalPath;
-
     expectedSize = 0;
     expectedHeaderSize = 0;
     receivedSize = 0;
     state = State :: AwaitPrefix; // setting the bookmark to the first progress again - basically i am resetting it
 
+    if (!QFile::rename(partPath, finalPath)) {
+        qDebug() << "Could not rename " << partPath << " to " << finalPath;
+        QFile :: remove(partPath); // removing the .part file (partially written file) from the disk
+        sendResult("error", "write_failed");
+        socket -> disconnectFromHost();
+        return;
+    }
+
+    qDebug() << "File renamed from " << partPath << " to " << finalPath;
+    sendResult("ok");
     qDebug() << "File received successfully";
 }
 
@@ -217,7 +236,7 @@ bool ReceiveSession :: handleBody()
         const qint64 written = incomingFile->write(receivedBuffer.constData(), toWrite); // write the required amount of body for the file
 
         if (written < 0){
-            qDebug() << "FIle write failed: " << incomingFile -> errorString();
+            qDebug() << "File write failed: " << incomingFile -> errorString();
             socket -> disconnectFromHost();
             return false;
         }
@@ -249,3 +268,31 @@ bool ReceiveSession :: processBuffer()
     return false;
 }
 
+void ReceiveSession :: sendResult(const QString &status, const QString &code)
+{
+    QJsonObject reply;
+    reply["v"] = currentVersionNumber;
+    reply["type"] = "file_result";
+    reply["status"] = status;
+
+    if (!code.isEmpty()) { // only when there is an error, code is added
+        reply["code"] = code;
+    }
+
+    const QByteArray json = QJsonDocument(reply).toJson(QJsonDocument :: Compact); // embedding reply into document; Compact produces JSON without space or newline to make is as short as possible
+
+    QByteArray frame(4, '\0'); // four bytes for the header prefix initialized to 00 00 00 00
+    qToBigEndian<quint32>(static_cast<quint32>(json.size()), frame.data());
+    frame.append(json); // puts JSON after prefix
+
+    qDebug() << "Sending frames: " << frame.toHex(' ');
+    socket -> write(frame); // queues it for sending
+
+    // in short, this function does this:
+    // Init a JSON object and it's protocol format
+    // convert it into text (byte array) with no extra spaces or lines
+    // then creates a byte array and init with 4 bytes and 0's
+    // adds the JSON object's size (as BigEndian) into the byte array
+    // appends the JSON object's text as bytes to the existing byte array
+    // sends the byte array to the socket to send to the client (from receiver)
+}

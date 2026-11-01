@@ -13,20 +13,21 @@ class ReceiveSession : public QObject
 
 public:
     explicit ReceiveSession (QTcpSocket *clientSocket, QObject *parent = nullptr);
+    ~ReceiveSession() override; // destructor and with overriding power over CoreBridge
 
 private:
 
-    ~ReceiveSession(); // destructor
     QTcpSocket *socket; // this is the connection
     QFile *incomingFile = nullptr; // Points to the file or image sent as an object
     qint64 expectedSize = 0; // Size of the image or file before sending
     qint64 receivedSize = 0; // Size of the image after receiving
-    QByteArray receivedBuffer; // Stores the bytes of Header length prefix and the JSON header
+    QByteArray receivedBuffer; // Stores the bytes of Header length prefix, JSON header and the body
     quint32 expectedHeaderSize = 0; // Stores the size of the JSON header
     enum class State { AwaitPrefix, AwaitHeader, ReceiveBody}; // enum with 3 states
     State state = State :: AwaitPrefix;
-    static constexpr quint32 maxHeaderSize = 16383; // to validate incoming header to the size of 16 KiB
+    static constexpr quint32 maxHeaderSize = 16384; // to validate incoming header to the size of 16 KiB
     QString finalPath; // Actual and valid name the file gets after completing all the checks
+    static constexpr int currentVersionNumber = 1;
 
     //methods
 
@@ -37,6 +38,7 @@ private:
     bool handleBody();
     bool processBuffer();
     void readData();
+    void sendResult(const QString &status, const QString &code = QString());
 };
 
 #endif // RECEIVESESSION_H
