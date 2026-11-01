@@ -5,6 +5,7 @@
 #include <QTcpSocket>
 #include <QFile>
 #include <QtEndian>
+#include <QString>
 
 class ReceiveSession : public QObject
 {
@@ -25,6 +26,7 @@ private:
     enum class State { AwaitPrefix, AwaitHeader, ReceiveBody}; // enum with 3 states
     State state = State :: AwaitPrefix;
     static constexpr quint32 maxHeaderSize = 16383; // to validate incoming header to the size of 16 KiB
+    QString finalPath; // Actual and valid name the file gets after completing all the checks
 
     //methods
 

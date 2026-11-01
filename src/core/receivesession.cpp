@@ -4,7 +4,37 @@
 #include <QJsonObject>
 #include <QFileInfo>
 #include <QDir>
+#include <QString>
 
+// Finding the valid filename for the arriving file
+static QString uniquePath(const QString &path)
+{
+    auto taken = [] (const QString &p) {
+        return QFileInfo :: exists(p) ||  QFileInfo :: exists(p + ".part");
+    };
+
+    if (!taken(path)) {
+        return path;
+    }
+
+    const QFileInfo info(path);
+    const QString baseName = info.completeBaseName();
+    const QString suffix = info.suffix();
+
+    for (int i = 1; i < 1000; i++) {
+        const QString name = suffix.isEmpty() ?
+        QString("%1(%2)").arg(baseName).arg(i) :
+        QString("%1(%2).%3").arg(baseName).arg(i).arg(suffix);
+
+        const QString candidate = info.dir().filePath(name);
+        if (!taken(candidate)) {
+            return candidate;
+        }
+    }
+    return path;
+}
+
+// Constructor
 ReceiveSession :: ReceiveSession (QTcpSocket *clientSocket, QObject *parent) : QObject(parent), socket(clientSocket) {
     qDebug() << "Session created for " << socket -> peerAddress().toString();
 
@@ -111,7 +141,7 @@ bool ReceiveSession :: handleHeader()
         return false;
     }
 
-    qDebug() << "Session header is vallid: ";
+    qDebug() << "Session header is vallid";
 
     // Initialization of Directory to save files
     QString destination = QDir :: homePath() + "/Downloads/OneNode";
@@ -129,11 +159,12 @@ bool ReceiveSession :: handleHeader()
 
     // Saving file to the directory
 
-    QString savedPath = QDir(destination).filePath(fileName);
-    qDebug() << "Saved path: " << savedPath;
+    finalPath = uniquePath(QDir(destination).filePath(fileName));
+    qDebug() << "Final path: " << finalPath;
 
     // creating the file (empty)
-    incomingFile = new QFile(savedPath, this); // fixing the data leak -> when the parent method is deleted, the child object (this QFile) is also deleted(closed to be specific) along with it, making sure no data leak
+    incomingFile = new QFile(finalPath + ".part", this); // fixing the data leak with "this"-> when the parent method is deleted, the child object (this QFile) is also deleted(closed to be specific) along with it, making sure no data leak
+
     if(!incomingFile -> open(QIODevice :: WriteOnly)) {
         qDebug() << "Destination file couldn't be accessed: " << incomingFile -> errorString();
 
@@ -157,8 +188,16 @@ bool ReceiveSession :: handleHeader()
 void ReceiveSession :: finishFile()
 {
     incomingFile -> close();
+    const QString partPath = incomingFile -> fileName();
     delete incomingFile;
     incomingFile = nullptr;
+
+    if (!QFile::rename(partPath, finalPath)) {
+        qDebug() << "Could not rename " << partPath << " to " << finalPath;
+        socket -> disconnectFromHost();
+    }
+
+    qDebug() << "File renamed from " << partPath << " to " << finalPath;
 
     expectedSize = 0;
     expectedHeaderSize = 0;
