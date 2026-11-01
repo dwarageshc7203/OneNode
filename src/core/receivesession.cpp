@@ -9,6 +9,36 @@ ReceiveSession :: ReceiveSession (QTcpSocket *clientSocket, QObject *parent) : Q
     qDebug() << "Session created for " << socket -> peerAddress().toString();
 
     connect(socket, &QTcpSocket :: readyRead, this, &ReceiveSession :: readData);
+    connect(socket, &QTcpSocket :: disconnected, this, &ReceiveSession :: onDisconnected);
+}
+
+// Destructor
+ReceiveSession :: ~ReceiveSession()
+{
+    qDebug() << "Session Destroyed";
+}
+
+// Reads data once a connection is instantiated, and a session is created
+void ReceiveSession :: readData()
+{
+    receivedBuffer.append(socket->readAll());
+
+    while (processBuffer()) {
+
+    }
+}
+
+// Disconnection handle
+void ReceiveSession :: onDisconnected()
+{
+    if (incomingFile) {
+        qDebug() << "Connection lost, file transfer is stopped midway for file: " << incomingFile -> fileName();
+        incomingFile -> remove(); // close the file and remove the half written file from disk
+        delete incomingFile;
+        incomingFile = nullptr;
+    }
+
+    deleteLater();
 }
 
 bool ReceiveSession :: handlePrefix()
@@ -180,11 +210,3 @@ bool ReceiveSession :: processBuffer()
     return false;
 }
 
-void ReceiveSession :: readData()
-{
-    receivedBuffer.append(socket->readAll());
-
-    while (processBuffer()) {
-
-    }
-}

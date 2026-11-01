@@ -14,6 +14,8 @@ public:
     explicit ReceiveSession (QTcpSocket *clientSocket, QObject *parent = nullptr);
 
 private:
+
+    ~ReceiveSession(); // destructor
     QTcpSocket *socket; // this is the connection
     QFile *incomingFile = nullptr; // Points to the file or image sent as an object
     qint64 expectedSize = 0; // Size of the image or file before sending
@@ -25,6 +27,8 @@ private:
     static constexpr quint32 maxHeaderSize = 16383; // to validate incoming header to the size of 16 KiB
 
     //methods
+
+    void onDisconnected();
     bool handlePrefix();
     bool handleHeader();
     void finishFile();
