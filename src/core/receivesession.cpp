@@ -82,8 +82,7 @@ bool ReceiveSession :: handlePrefix()
     receivedBuffer.remove(0, 4);
 
     if (expectedHeaderSize == 0 || expectedHeaderSize > maxHeaderSize) {
-        qDebug() << "Invalid header size: " << expectedHeaderSize;
-        socket -> disconnectFromHost();
+        reject("invalid_header", "Invalid header size");
         return false;
     }
 
@@ -107,8 +106,7 @@ bool ReceiveSession :: handleHeader()
     // Checking if the bytes transformed into JSON is an actual object
     if (error.error != QJsonParseError :: NoError || !document.isObject())
     {
-        qDebug() << "Invalid JSON header: " << error.errorString();
-        socket -> disconnectFromHost();
+        reject("invalid_header", error.errorString());
         return false;
     }
 
@@ -116,22 +114,19 @@ bool ReceiveSession :: handleHeader()
 
     // Checking version number from the Protocol header field from the JSON header object
     if (!metaData.value("v").isDouble() || metaData.value("v").toInt() != currentVersionNumber) {
-        qDebug() << "Unsupported protocol version. Current version is " << currentVersionNumber;
-        socket -> disconnectFromHost();
+        reject("unsupported", "Unsupported protocol version");
         return false;
     }
 
     // Checking for unsupported "type" field
     if (metaData.value("type").toString() != "file") { // for the upcoming version, will include checks to allow "copied text" or others ...
-        qDebug() << "Unsupported message type: " << metaData.value("type").toString();
-        socket -> disconnectFromHost();
+        reject("unsupported", "Unsupported message type: " + metaData.value("type").toString());
         return false;
     }
 
     // Checking filename and size from the JSON header object
     if (!metaData.value("filename").isString() || !metaData.value("size").isDouble()) {
-        qDebug() << "Header is missing FileName or Size";
-        socket -> disconnectFromHost();
+        reject("invalid_header", "Header is missing FileName or Size");
         return false;
     }
 
@@ -139,9 +134,13 @@ bool ReceiveSession :: handleHeader()
     qint64 fileSize = metaData.value("size").toInteger();
 
     // Validating fileName and preventing path traversal
-    if (fileName.isEmpty() || fileSize < 0) {
-        qDebug() << "Filename empty or size is negative ";
-        socket -> disconnectFromHost();
+    if (fileName.isEmpty()) {
+        reject("invalid_filename", "Filename empty");
+        return false;
+    }
+
+    if(fileSize < 0) {
+        reject("invalid_header", "File size is negative");
         return false;
     }
 
@@ -152,8 +151,7 @@ bool ReceiveSession :: handleHeader()
         fileName == "." || // rejecting special directory name - . -> current directory
         fileName == ".." // rejecting special directory name - .. -> parent directory
         ) {
-        qDebug() << "Invalid fileName: " << fileName;
-        socket -> disconnectFromHost();
+        reject("invalid_filename", "Invalid fileName: " + fileName);
         return false;
     }
 
@@ -181,12 +179,11 @@ bool ReceiveSession :: handleHeader()
     // creating the file (empty)
     incomingFile = new QFile(finalPath + ".part", this); // fixing the data leak with "this"-> when the parent method is deleted, the child object (this QFile) is also deleted(closed to be specific) along with it, making sure no data leak
 
-    if(!incomingFile -> open(QIODevice :: WriteOnly)) {
-        qDebug() << "Destination file couldn't be accessed: " << incomingFile -> errorString();
-
+    if(!incomingFile -> open(QIODevice :: WriteOnly)) { // write failed
+        const QString reason = incomingFile -> errorString();
+        reject("write_failed", "Destination file couldn't be accessed: " + reason);
         delete incomingFile;
         incomingFile = nullptr;
-        socket -> disconnectFromHost();
         return false;
     }
 
@@ -214,10 +211,8 @@ void ReceiveSession :: finishFile()
     state = State :: AwaitPrefix; // setting the bookmark to the first progress again - basically i am resetting it
 
     if (!QFile::rename(partPath, finalPath)) {
-        qDebug() << "Could not rename " << partPath << " to " << finalPath;
         QFile :: remove(partPath); // removing the .part file (partially written file) from the disk
-        sendResult("error", "write_failed");
-        socket -> disconnectFromHost();
+        reject("write_failed", "Could not rename " + partPath + " to " + finalPath);
         return;
     }
 
@@ -236,8 +231,7 @@ bool ReceiveSession :: handleBody()
         const qint64 written = incomingFile->write(receivedBuffer.constData(), toWrite); // write the required amount of body for the file
 
         if (written < 0){
-            qDebug() << "File write failed: " << incomingFile -> errorString();
-            socket -> disconnectFromHost();
+            reject("write_failed", "File write failed: " + incomingFile -> errorString());
             return false;
         }
 
@@ -268,6 +262,7 @@ bool ReceiveSession :: processBuffer()
     return false;
 }
 
+// sends acknowledgement result to the sender
 void ReceiveSession :: sendResult(const QString &status, const QString &code)
 {
     QJsonObject reply;
@@ -295,4 +290,13 @@ void ReceiveSession :: sendResult(const QString &status, const QString &code)
     // adds the JSON object's size (as BigEndian) into the byte array
     // appends the JSON object's text as bytes to the existing byte array
     // sends the byte array to the socket to send to the client (from receiver)
+}
+
+// rejection handler (yes, it is, not alcohol)
+void ReceiveSession :: reject(const QString &code, const QString &reason)
+{
+    qDebug() << "Rejected: " << reason;
+    sendResult("error", code);
+    socket -> disconnectFromHost();
+
 }

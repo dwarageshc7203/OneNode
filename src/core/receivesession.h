@@ -39,6 +39,8 @@ private:
     bool processBuffer();
     void readData();
     void sendResult(const QString &status, const QString &code = QString());
+    void reject(const QString &code, const QString &reason);
+
 };
 
 #endif // RECEIVESESSION_H
