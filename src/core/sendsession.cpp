@@ -13,6 +13,7 @@ SendSession :: SendSession (const QString &host, quint16 port, const QString &fi
     connect(socket, &QTcpSocket :: disconnected, this, &SendSession :: onDisconnected);
     connect(socket, &QTcpSocket :: errorOccurred, this, &SendSession :: onSocketError);
     connect(socket, &QTcpSocket :: bytesWritten, this, &SendSession :: sendMore);
+    connect(socket, &QTcpSocket :: readyRead, this, &SendSession :: onReadyRead);
 
     qDebug() << "Sender session: connecting to: " << host << port;
     socket -> connectToHost(host, port);
@@ -30,6 +31,7 @@ void SendSession :: onConnected()
     if (!info.exists() || !info.isFile()) { // checks if the path exist and points to a file rather than a directory
         qDebug() << "Sender Session file not found: " << filePath;
         socket -> disconnectFromHost();
+        return;
     }
 
     file = new QFile(filePath, this);
@@ -48,7 +50,7 @@ void SendSession :: onConnected()
     header["v"] = currentVersionNumber;
     header["type"] = "file";
     header["filename"] = info.fileName();
-    header["size"] = info.size();
+    header["size"] = totalSize;
 
     // converts the header into JSON (text) and removes unnecessary spaces and lines to make it 'compact'
     const QByteArray json = QJsonDocument(header).toJson(QJsonDocument :: Compact);
@@ -65,6 +67,10 @@ void SendSession :: onConnected()
 
 void SendSession :: onDisconnected()
 {
+    if (!gotReply) { // checking if we changed gotReply to true in any process
+        qDebug() << "Sender session disconnected before reply; transfer failed";
+    }
+
     qDebug() << "Sender session disconnected";
     deleteLater();
 }
@@ -102,4 +108,47 @@ void SendSession :: sendMore()
         delete file;
         file = nullptr;
     }
+}
+
+void SendSession :: onReadyRead()
+{
+
+    receivedBuffer.append(socket -> readAll());
+
+    if (receivedBuffer.size() < 4) { // length prefix not yet arrived
+        return;
+    }
+
+    const quint32 length = qFromBigEndian<quint32>(receivedBuffer.constData()); // basically it decodes from the header prefix for the length of the JSON text reply
+
+    if (length == 0 || length > 16384) { // to remain within 0 - 16384
+        qDebug() << "Sender session invalid reply length: " << length;
+        socket -> disconnectFromHost();
+        return;
+    }
+
+    if (receivedBuffer.size() < static_cast<qsizetype>(length + 4) ) { // to account for the header prefix and the reply length
+        return;
+    }
+
+    QJsonParseError error;
+    const QJsonDocument document = QJsonDocument :: fromJson(receivedBuffer.mid(4, length), &error); // parses bytes into JSON document and handling errors
+
+    if (error.error != QJsonParseError :: NoError || !document.isObject()) {
+        qDebug() << "Sender session invalid reply error: " << error.errorString();
+        socket -> disconnectFromHost();
+        return;
+    }
+
+    const QJsonObject reply = document.object(); // converting the JSON document into JSON object for readability
+    gotReply = true; // changing to true since we got a reply from the receiver
+
+    if(reply.value("status").toString() == "ok") { // checking the value of the reply code
+        qDebug() << "Sender session transfer succeeded";
+    }
+    else {
+        qDebug() << "Sender session transfer failed, code: " << reply.value("code").toString();
+    }
+
+    socket -> disconnectFromHost();
 }
