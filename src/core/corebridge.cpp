@@ -1,5 +1,6 @@
 #include "corebridge.h"
 #include "receivesession.h"
+#include "sendsession.h"
 
 #include <QTcpSocket>
 #include <QDebug>
@@ -28,6 +29,11 @@ bool CoreBridge :: startListening()
 void CoreBridge :: stopListening()
 {
     server -> close();
+}
+
+void CoreBridge :: sendFile(const QString &host, const QString &filePath)
+{
+    new SendSession(host, 45454, filePath, this); // calls out Sender Session
 }
 
 void CoreBridge :: handleNewConnection()

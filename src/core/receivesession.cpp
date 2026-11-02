@@ -46,6 +46,10 @@ ReceiveSession :: ReceiveSession (QTcpSocket *clientSocket, QObject *parent) : Q
 // Destructor
 ReceiveSession :: ~ReceiveSession()
 {
+    if (incomingFile) {
+        qDebug() << "Session destroyed mid-transfer, removing " << incomingFile -> fileName();
+        incomingFile -> remove();
+    }
     qDebug() << "Session Destroyed";
 }
 
@@ -298,5 +302,4 @@ void ReceiveSession :: reject(const QString &code, const QString &reason)
     qDebug() << "Rejected: " << reason;
     sendResult("error", code);
     socket -> disconnectFromHost();
-
 }

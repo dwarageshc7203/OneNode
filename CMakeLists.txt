@@ -20,6 +20,8 @@ qt_add_qml_module(appOneNode
         SOURCES src/core/corebridge.cpp
         SOURCES src/core/receivesession.h
         SOURCES src/core/receivesession.cpp
+        SOURCES src/core/sendsession.h
+        SOURCES src/core/sendsession.cpp
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

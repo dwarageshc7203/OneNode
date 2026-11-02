@@ -18,6 +18,7 @@ public:
     explicit CoreBridge (QObject *parent = nullptr);
     Q_INVOKABLE bool startListening();
     Q_INVOKABLE void stopListening();
+    Q_INVOKABLE void sendFile(const QString &host, const QString &filePath);
 
 private:
 
