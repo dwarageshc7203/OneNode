@@ -8,6 +8,24 @@ Window {
     visible: true
     title: qsTr("One Node")
     property string welcomeMessage: "Welcome to OneNode"
+
+    Connections {
+
+        target: core
+        function onTransferProgress(name, done, total) {
+            console.log("Progress: ", name, " : ", done, " / ", total );
+        }
+
+        function onTransferFinished(name) {
+            console.log("Finished: ", name);
+        }
+
+        function onTransferFailed(name, reason) {
+            console.log("Failed: ", name, " | reason: ", reason);
+        }
+
+    }
+
     Text {
         text: "Welcome to OneNode";
         anchors.centerIn: parent;

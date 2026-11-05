@@ -1,6 +1,7 @@
 #include "corebridge.h"
 #include "receivesession.h"
 #include "sendsession.h"
+#include "protocol.h"
 
 #include <QTcpSocket>
 #include <QDebug>
@@ -23,7 +24,7 @@ CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpS
 
 bool CoreBridge :: startListening()
 {
-    return server -> listen (QHostAddress :: Any, 45454);
+    return server -> listen (QHostAddress :: Any, Protocol::defaultPort);
 }
 
 void CoreBridge :: stopListening()
@@ -33,7 +34,10 @@ void CoreBridge :: stopListening()
 
 void CoreBridge :: sendFile(const QString &host, const QString &filePath)
 {
-    new SendSession(host, 45454, filePath, this); // calls out Sender Session
+    auto *sendSession = new SendSession(host, Protocol::defaultPort, filePath, this); // calls out Sender Session
+    connect(sendSession, &SendSession :: progress, this, &CoreBridge :: transferProgress);
+    connect(sendSession, &SendSession :: finished, this, &CoreBridge :: transferFinished);
+    connect(sendSession, &SendSession :: failed, this, &CoreBridge :: transferFailed);
 }
 
 void CoreBridge :: handleNewConnection()
@@ -50,7 +54,11 @@ void CoreBridge :: handleNewConnection()
     // Connect handle
     qDebug() << "A client has connected: " << client -> peerAddress().toString();
 
-    new ReceiveSession(client, this); // We are now bringing in a new session with the new connection :)
+    auto *receiveSession = new ReceiveSession(client, this); // We are now bringing in a new session with the new connection :)
+
+    connect(receiveSession, &ReceiveSession :: progress, this, &CoreBridge :: transferProgress);
+    connect(receiveSession, &ReceiveSession :: finished, this, &CoreBridge :: transferFinished);
+    connect(receiveSession, &ReceiveSession :: failed, this, &CoreBridge :: transferFailed);
 
     // Disconnect handle
     connect (client, &QTcpSocket :: disconnected, this, [this, client] {

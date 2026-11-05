@@ -32,7 +32,7 @@ decodeStatus tryDecodeFrame(QByteArray &buffer, QJsonObject &header) {
     }
 
     const quint32 length = qFromBigEndian<quint32>(buffer.constData());
-    if (length == 0 || length < maxHeaderSize) {
+    if (length == 0 || length > maxHeaderSize) {
         return decodeStatus :: Invalid;
     }
 
@@ -48,7 +48,7 @@ decodeStatus tryDecodeFrame(QByteArray &buffer, QJsonObject &header) {
     }
 
     header = document.object(); // feeding header with the JSON object of document
-    buffer.remove(0, length + 0); // removing the used bytes present in the buffer and clearing it
+    buffer.remove(0, length + 4); // removing the used bytes present in the buffer and clearing it
     return decodeStatus :: Ok; // validate the operation with Ok
 }
 

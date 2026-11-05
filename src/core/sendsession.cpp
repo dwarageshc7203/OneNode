@@ -1,4 +1,5 @@
 #include "sendsession.h"
+#include "protocol.h"
 
 #include <QDebug>
 #include <QFileInfo>
@@ -7,7 +8,7 @@
 #include <QtEndian>
 
 // SendSession constructor
-SendSession :: SendSession (const QString &host, quint16 port, const QString &filePath, QObject *parent) : QObject(parent), socket(new QTcpSocket(this)), filePath(filePath)
+SendSession :: SendSession (const QString &host, quint16 port, const QString &filePath, QObject *parent) : QObject(parent), socket(new QTcpSocket(this)), filePath(filePath), fileName(QFileInfo(filePath).fileName())
 {
     connect(socket, &QTcpSocket :: connected, this, &SendSession :: onConnected);
     connect(socket, &QTcpSocket :: disconnected, this, &SendSession :: onDisconnected);
@@ -29,16 +30,17 @@ void SendSession :: onConnected()
     const QFileInfo info(filePath); // gets the path's info
 
     if (!info.exists() || !info.isFile()) { // checks if the path exist and points to a file rather than a directory
-        qDebug() << "Sender Session file not found: " << filePath;
+        fail("Sender Session file not found: " + filePath); // passing on the fail func with the reason to create a signal failed()
         socket -> disconnectFromHost();
         return;
     }
 
     file = new QFile(filePath, this);
     if (!file -> open(QIODevice :: ReadOnly)) { // checkes if the file has Read access
-        qDebug() << "Sender session cannot open this file: " << file -> fileName() << " error: " << file -> errorString();
+        const QString reason = file -> errorString(); // save the error before init the file to nullptr
         delete file;
         file = nullptr; // when the condition fails, we are reinitializing file to point towards nullptr and disconnect
+        fail("Sender session cannot open this file: " + file -> fileName() + " error: " + reason); // passing on the fail func with the reason to create a signal failed()
         socket -> disconnectFromHost();
         return;
     }
@@ -47,37 +49,29 @@ void SendSession :: onConnected()
 
     // creating the JSON header as part of the protocol, with all it's fields
     QJsonObject header;
-    header["v"] = currentVersionNumber;
+    header["v"] = Protocol :: version;
     header["type"] = "file";
     header["filename"] = info.fileName();
     header["size"] = totalSize;
 
-    // converts the header into JSON (text) and removes unnecessary spaces and lines to make it 'compact'
-    const QByteArray json = QJsonDocument(header).toJson(QJsonDocument :: Compact);
-
-    QByteArray frame(4, '\0'); // creates an empty byte array of set of 4 bytes, all '00'
-    qToBigEndian<quint32>(static_cast<quint32>(json.size()), frame.data()); // adds the json.size() as quint32 type into frame array
-    frame.append(json); // appends json with frame
-
-    qDebug() << "Sender session sending header: " << info.fileName() << " size " <<info.size();
-    socket -> write(frame); // writes the frame onto the connected session socket
+    socket -> write(Protocol :: encodeFrame(header)); // writes the frame onto the connected session socket using Protocol method
 
     sendMore(); // after writing, make signal to send more bytes to fill the queue
 }
 
 void SendSession :: onDisconnected()
 {
-    if (!gotReply) { // checking if we changed gotReply to true in any process
-        qDebug() << "Sender session disconnected before reply; transfer failed";
-    }
-
-    qDebug() << "Sender session disconnected";
+    fail("Sender Session disconnected before reply; transfer failed");
     deleteLater();
 }
 
 void SendSession :: onSocketError(QAbstractSocket :: SocketError)
 {
-    qDebug() << "Sender session socket error: " << socket -> errorString();
+    fail(socket -> errorString());
+
+    if (socket -> state() == QAbstractSocket :: UnconnectedState) {
+        deleteLater();
+    }
 }
 
 void SendSession :: sendMore()
@@ -90,10 +84,12 @@ void SendSession :: sendMore()
         const QByteArray chunk = file -> read (qMin (chunkSize, totalSize - sentSize)); // slice or partition of data of either defined size (chunkSize) or if only less bytes are available, then the remaining bytes
 
         if(chunk.isEmpty()) { // if the chunk of data is empty, it means there is no data to partition - signalling session break or unreadable file
-            qDebug() << "Sender session file ended early or could not be read";
             file -> close();
             delete file;
             file = nullptr;
+
+            fail("Sender session file ended early or could not be read");
+
             socket -> disconnectFromHost();
             return;
         }
@@ -108,10 +104,19 @@ void SendSession :: sendMore()
         delete file;
         file = nullptr;
     }
+
+    // we tell how much bytes left the socket by finding (sent bytes - still waiting in queue bytes)
+    emit progress(fileName, qMax<qint64> (0, sentSize - socket -> bytesToWrite()), totalSize);
+
 }
 
+// activates whenever there is any bytes on the buffer
 void SendSession :: onReadyRead()
 {
+
+    if (reported) { // exactly one reply per session
+        return;
+    }
 
     receivedBuffer.append(socket -> readAll());
 
@@ -119,36 +124,38 @@ void SendSession :: onReadyRead()
         return;
     }
 
-    const quint32 length = qFromBigEndian<quint32>(receivedBuffer.constData()); // basically it decodes from the header prefix for the length of the JSON text reply
+    QJsonObject reply;
 
-    if (length == 0 || length > 16384) { // to remain within 0 - 16384
-        qDebug() << "Sender session invalid reply length: " << length;
+    const Protocol :: decodeStatus status = Protocol :: tryDecodeFrame(receivedBuffer, reply);
+
+    if (status == Protocol :: decodeStatus :: NeedMoreData) {
+        return;
+    }
+
+    if (status == Protocol :: decodeStatus :: Invalid) {
+        fail("Invalid reply from receiver");
         socket -> disconnectFromHost();
         return;
     }
-
-    if (receivedBuffer.size() < static_cast<qsizetype>(length + 4) ) { // to account for the header prefix and the reply length
-        return;
-    }
-
-    QJsonParseError error;
-    const QJsonDocument document = QJsonDocument :: fromJson(receivedBuffer.mid(4, length), &error); // parses bytes into JSON document and handling errors
-
-    if (error.error != QJsonParseError :: NoError || !document.isObject()) {
-        qDebug() << "Sender session invalid reply error: " << error.errorString();
-        socket -> disconnectFromHost();
-        return;
-    }
-
-    const QJsonObject reply = document.object(); // converting the JSON document into JSON object for readability
-    gotReply = true; // changing to true since we got a reply from the receiver
 
     if(reply.value("status").toString() == "ok") { // checking the value of the reply code
-        qDebug() << "Sender session transfer succeeded";
+        reported = true;
+        emit finished("Sender session transfer succeeded");
     }
     else {
-        qDebug() << "Sender session transfer failed, code: " << reply.value("code").toString();
+        fail("Sender session transfer failed, code: " + reply.value("code").toString());
     }
 
     socket -> disconnectFromHost();
+}
+
+void SendSession :: fail(const QString &reason)
+{
+    if (reported) {
+        return; // if the process is done, no need for declaring fail
+    }
+
+    reported = true;
+    qDebug() << "Send session failed: " << reason;
+    emit failed(fileName, reason);
 }

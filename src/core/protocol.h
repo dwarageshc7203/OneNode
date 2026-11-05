@@ -7,8 +7,8 @@
 namespace Protocol {
 
 constexpr int version = 1; // version of the app
-constexpr int maxHeaderSize = 16384; // 16 KiB header size
-constexpr int defaultPort = 45454; // Port number for the sender and receiver
+constexpr quint32 maxHeaderSize = 16384; // 16 KiB header size
+constexpr quint16 defaultPort = 45454; // Port number for the sender and receiver
 
 QByteArray encodeFrame(const QJsonObject &header); // builds the byte array for the prefix and the JSON header
 
@@ -22,7 +22,7 @@ enum class decodeStatus {Ok, NeedMoreData, Invalid};
 // in the next step, we check if the buffer has the value of header size S within 0 < S <= 16 KiB (Ok - next step, Invalid - the header totally is invalid, we disconnect)
 // in the last step, if the entire buffer size is greater than header size S + the prefix length which is 4 => buffer.size() >= 4 + header.size() (Ok - validated to next process, NeedMoreData - waiting)
 
-decodeStatus tryDecodeFrame(QByteArray &buffer, QByteArray &header);
+decodeStatus tryDecodeFrame(QByteArray &buffer, QJsonObject &header);
 }
 
 #endif // PROTOCOL_H

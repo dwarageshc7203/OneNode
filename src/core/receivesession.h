@@ -15,6 +15,11 @@ public:
     explicit ReceiveSession (QTcpSocket *clientSocket, QObject *parent = nullptr);
     ~ReceiveSession() override; // destructor and with overriding power over CoreBridge
 
+signals:
+    void progress(const QString &fileName, const qint64 done, const qint64 total);
+    void finished(const QString &fileName);
+    void failed(const QString &fileName, const QString &reason);
+
 private:
 
     QTcpSocket *socket; // this is the connection
@@ -25,9 +30,9 @@ private:
     quint32 expectedHeaderSize = 0; // Stores the size of the JSON header
     enum class State { AwaitPrefix, AwaitHeader, ReceiveBody}; // enum with 3 states
     State state = State :: AwaitPrefix;
-    static constexpr quint32 maxHeaderSize = 16384; // to validate incoming header to the size of 16 KiB
     QString finalPath; // Actual and valid name the file gets after completing all the checks
-    static constexpr int currentVersionNumber = 1;
+    QString currentName; // file name currently (.part or complete file)
+    bool closing = false;
 
     //methods
 

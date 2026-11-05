@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(OneNode VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Network)
@@ -22,8 +24,6 @@ qt_add_qml_module(appOneNode
         SOURCES src/core/receivesession.cpp
         SOURCES src/core/sendsession.h
         SOURCES src/core/sendsession.cpp
-        SOURCES
-        SOURCES
         SOURCES src/core/protocol.h
         SOURCES src/core/protocol.cpp
 )

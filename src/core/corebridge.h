@@ -20,6 +20,11 @@ public:
     Q_INVOKABLE void stopListening();
     Q_INVOKABLE void sendFile(const QString &host, const QString &filePath);
 
+signals:
+    void transferProgress(const QString &fileName, qint64 done, qint64 total);
+    void transferFinished(const QString &fileName);
+    void transferFailed(const QString &fileName, const QString &reason);
+
 private:
 
     // Objects and variables

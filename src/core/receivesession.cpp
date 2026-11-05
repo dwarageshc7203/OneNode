@@ -1,4 +1,6 @@
 #include "receivesession.h"
+#include "protocol.h"
+
 #include <QDebug>
 #include <QJsonParseError>
 #include <QJsonObject>
@@ -56,6 +58,11 @@ ReceiveSession :: ~ReceiveSession()
 // Reads data once a connection is instantiated, and a session is created
 void ReceiveSession :: readData()
 {
+    if (closing) {
+        socket -> readAll();
+        return;
+    }
+
     receivedBuffer.append(socket->readAll());
 
     while (processBuffer()) {
@@ -67,6 +74,11 @@ void ReceiveSession :: readData()
 void ReceiveSession :: onDisconnected()
 {
     if (incomingFile) {
+
+        if (!closing) {
+            emit failed(currentName, "Connection lost mid-transfer");
+        }
+
         qDebug() << "Connection lost, file transfer is stopped midway for file: " << incomingFile -> fileName();
         incomingFile -> remove(); // close the file and remove the half written file from disk
         delete incomingFile;
@@ -85,7 +97,7 @@ bool ReceiveSession :: handlePrefix()
     expectedHeaderSize = qFromBigEndian<quint32>(receivedBuffer.constData());
     receivedBuffer.remove(0, 4);
 
-    if (expectedHeaderSize == 0 || expectedHeaderSize > maxHeaderSize) {
+    if (expectedHeaderSize == 0 || expectedHeaderSize > Protocol :: maxHeaderSize) {
         reject("invalid_header", "Invalid header size");
         return false;
     }
@@ -117,7 +129,7 @@ bool ReceiveSession :: handleHeader()
     QJsonObject metaData = document.object(); // This stores the actual JSON header object
 
     // Checking version number from the Protocol header field from the JSON header object
-    if (!metaData.value("v").isDouble() || metaData.value("v").toInt() != currentVersionNumber) {
+    if (!metaData.value("v").isDouble() || metaData.value("v").toInt() != Protocol :: version) {
         reject("unsupported", "Unsupported protocol version");
         return false;
     }
@@ -135,6 +147,7 @@ bool ReceiveSession :: handleHeader()
     }
 
     QString fileName = metaData.value("filename").toString();
+    currentName = fileName;
     qint64 fileSize = metaData.value("size").toInteger();
 
     // Validating fileName and preventing path traversal
@@ -199,6 +212,7 @@ bool ReceiveSession :: handleHeader()
 
     qDebug() << "Receiving " << fileName << " of size " << fileSize << " bytes";
 
+    emit progress(currentName, 0, fileSize);
     return true;
 }
 
@@ -222,6 +236,9 @@ void ReceiveSession :: finishFile()
 
     qDebug() << "File renamed from " << partPath << " to " << finalPath;
     sendResult("ok");
+
+    emit finished(currentName);
+
     qDebug() << "File received successfully";
 }
 
@@ -241,6 +258,8 @@ bool ReceiveSession :: handleBody()
 
         receivedSize += written; // updating the written bytes
         receivedBuffer.remove(0,written);
+
+        emit progress (currentName, receivedSize, expectedSize);
     }
 
     if (receivedSize == expectedSize) {
@@ -270,7 +289,7 @@ bool ReceiveSession :: processBuffer()
 void ReceiveSession :: sendResult(const QString &status, const QString &code)
 {
     QJsonObject reply;
-    reply["v"] = currentVersionNumber;
+    reply["v"] = Protocol :: version;
     reply["type"] = "file_result";
     reply["status"] = status;
 
@@ -278,11 +297,7 @@ void ReceiveSession :: sendResult(const QString &status, const QString &code)
         reply["code"] = code;
     }
 
-    const QByteArray json = QJsonDocument(reply).toJson(QJsonDocument :: Compact); // embedding reply into document; Compact produces JSON without space or newline to make is as short as possible
-
-    QByteArray frame(4, '\0'); // four bytes for the header prefix initialized to 00 00 00 00
-    qToBigEndian<quint32>(static_cast<quint32>(json.size()), frame.data());
-    frame.append(json); // puts JSON after prefix
+    const QByteArray frame = Protocol :: encodeFrame(reply);
 
     qDebug() << "Sending frames: " << frame.toHex(' ');
     socket -> write(frame); // queues it for sending
@@ -299,7 +314,14 @@ void ReceiveSession :: sendResult(const QString &status, const QString &code)
 // rejection handler (yes, it is, not alcohol)
 void ReceiveSession :: reject(const QString &code, const QString &reason)
 {
+    if (closing) {
+        return;
+    }
+
+    closing = true;
     qDebug() << "Rejected: " << reason;
+    emit failed(currentName, reason);
+
     sendResult("error", code);
     socket -> disconnectFromHost();
 }
