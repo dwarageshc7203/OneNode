@@ -24,7 +24,7 @@ CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpS
 
 bool CoreBridge :: startListening()
 {
-    return server -> listen (QHostAddress :: Any, Protocol::defaultPort);
+    return server -> listen (QHostAddress :: Any, Protocol :: defaultPort);
 }
 
 void CoreBridge :: stopListening()
@@ -34,7 +34,10 @@ void CoreBridge :: stopListening()
 
 void CoreBridge :: sendFile(const QString &host, const QString &filePath)
 {
-    auto *sendSession = new SendSession(host, Protocol::defaultPort, filePath, this); // calls out Sender Session
+    auto *sendSession = new SendSession(host, Protocol :: defaultPort, filePath, this); // calls out Sender Session
+
+    // connecting signal of SendSession with that of CoreBridge
+
     connect(sendSession, &SendSession :: progress, this, &CoreBridge :: transferProgress);
     connect(sendSession, &SendSession :: finished, this, &CoreBridge :: transferFinished);
     connect(sendSession, &SendSession :: failed, this, &CoreBridge :: transferFailed);
@@ -55,6 +58,8 @@ void CoreBridge :: handleNewConnection()
     qDebug() << "A client has connected: " << client -> peerAddress().toString();
 
     auto *receiveSession = new ReceiveSession(client, this); // We are now bringing in a new session with the new connection :)
+
+    // connecting signal of ReceiveSession with that of CoreBridge
 
     connect(receiveSession, &ReceiveSession :: progress, this, &CoreBridge :: transferProgress);
     connect(receiveSession, &ReceiveSession :: finished, this, &CoreBridge :: transferFinished);

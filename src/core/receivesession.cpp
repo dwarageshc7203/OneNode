@@ -193,7 +193,8 @@ bool ReceiveSession :: handleHeader()
     finalPath = uniquePath(QDir(destination).filePath(fileName));
     qDebug() << "Final path: " << finalPath;
 
-    // creating the file (empty)
+    // creating the file (empty) ; .part refers to the file being partial and not fully written
+    // when the file writing is complete, we remove the .part suffix
     incomingFile = new QFile(finalPath + ".part", this); // fixing the data leak with "this"-> when the parent method is deleted, the child object (this QFile) is also deleted(closed to be specific) along with it, making sure no data leak
 
     if(!incomingFile -> open(QIODevice :: WriteOnly)) { // write failed
@@ -285,7 +286,7 @@ bool ReceiveSession :: processBuffer()
     return false;
 }
 
-// sends acknowledgement result to the sender
+// sends acknowledgement result to the sender - handled by onReadyRead()
 void ReceiveSession :: sendResult(const QString &status, const QString &code)
 {
     QJsonObject reply;

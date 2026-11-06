@@ -32,7 +32,7 @@ private:
     State state = State :: AwaitPrefix;
     QString finalPath; // Actual and valid name the file gets after completing all the checks
     QString currentName; // file name currently (.part or complete file)
-    bool closing = false;
+    bool closing = false; // allows no other action ; much like operation is closed
 
     //methods
 

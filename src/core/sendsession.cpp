@@ -20,6 +20,7 @@ SendSession :: SendSession (const QString &host, quint16 port, const QString &fi
     socket -> connectToHost(host, port);
 }
 
+// destructor hahaha
 SendSession :: ~SendSession()
 {
     qDebug() << "Sender session destroyed";
@@ -38,9 +39,10 @@ void SendSession :: onConnected()
     file = new QFile(filePath, this);
     if (!file -> open(QIODevice :: ReadOnly)) { // checkes if the file has Read access
         const QString reason = file -> errorString(); // save the error before init the file to nullptr
+        const QString name = file -> fileName();
         delete file;
         file = nullptr; // when the condition fails, we are reinitializing file to point towards nullptr and disconnect
-        fail("Sender session cannot open this file: " + file -> fileName() + " error: " + reason); // passing on the fail func with the reason to create a signal failed()
+        fail("Sender session cannot open this file: " + name + " error: " + reason); // passing on the fail func with the reason to create a signal failed()
         socket -> disconnectFromHost();
         return;
     }
@@ -110,7 +112,7 @@ void SendSession :: sendMore()
 
 }
 
-// activates whenever there is any bytes on the buffer
+// checking out for a reply from the receiver - file received successfully or not
 void SendSession :: onReadyRead()
 {
 

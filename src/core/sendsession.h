@@ -30,7 +30,7 @@ private:
     static constexpr qint64 chunkSize = 64 * 1024; // 64 KiB per chunk - slice of data accessed in a particular iteration
     static constexpr qint64 maxQueuedBytes = 256 * 1024; // sets the upper limit on how much unwritten memory is allowed to sit in memory waiting for receiver
     QByteArray receivedBuffer; // to process the sending bytes
-    bool reported = false; // status to check if the sending process is complete
+    bool reported = false; // status to check if the sending process is complete (can be either positive or negative)
 
     //methods
 
