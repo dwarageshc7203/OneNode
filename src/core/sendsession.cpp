@@ -142,7 +142,7 @@ void SendSession :: onReadyRead()
 
     if(reply.value("status").toString() == "ok") { // checking the value of the reply code
         reported = true;
-        emit finished("Sender session transfer succeeded, filename: " + fileName);
+        emit finished(fileName);
     }
     else {
         fail("Sender session transfer failed, code: " + reply.value("code").toString());
