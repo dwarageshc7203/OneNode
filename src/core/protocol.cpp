@@ -7,6 +7,7 @@
 namespace Protocol
 {
 
+// converting given header into prefix and JSON header
 QByteArray encodeFrame(const QJsonObject &header) {
 
     // converts the header into JSON document and eliminates unnecessary spaces and lines to make it compact
