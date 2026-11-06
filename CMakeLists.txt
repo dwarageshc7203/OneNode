@@ -26,6 +26,7 @@ qt_add_qml_module(appOneNode
         SOURCES src/core/sendsession.cpp
         SOURCES src/core/protocol.h
         SOURCES src/core/protocol.cpp
+
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -49,3 +50,7 @@ install(TARGETS appOneNode
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+enable_testing()
+add_subdirectory(tests)
+
