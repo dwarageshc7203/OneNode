@@ -76,35 +76,38 @@ void SendSession :: onSocketError(QAbstractSocket :: SocketError)
     }
 }
 
+// function to handle sending of chunks over the limited size queue
 void SendSession :: sendMore()
 {
-    if (!file) {
+    if (reported) { // checking if the oepration is already completed
         return;
     }
 
-    while (sentSize < totalSize && socket -> bytesToWrite() < maxQueuedBytes) { // checks whether there are bytes to transfer and if there is any space within the limit for more bytes
-        const QByteArray chunk = file -> read (qMin (chunkSize, totalSize - sentSize)); // slice or partition of data of either defined size (chunkSize) or if only less bytes are available, then the remaining bytes
+    if (file) { // when the operation is done or failed, file is set to nullptr. we are checking on that
+        while (sentSize < totalSize && socket -> bytesToWrite() < maxQueuedBytes) { // checks whether there are bytes to transfer and if there is any space within the limit for more bytes
+            const QByteArray chunk = file -> read (qMin (chunkSize, totalSize - sentSize)); // slice or partition of data of either defined size (chunkSize) or if only less bytes are available, then the remaining bytes
 
-        if(chunk.isEmpty()) { // if the chunk of data is empty, it means there is no data to partition - signalling session break or unreadable file
+            if(chunk.isEmpty()) { // if the chunk of data is empty, it means there is no data to partition - signalling session break or unreadable file
+                file -> close();
+                delete file;
+                file = nullptr;
+
+                fail("Sender session file ended early or could not be read");
+
+                socket -> disconnectFromHost();
+                return;
+            }
+
+            socket -> write(chunk); // write chunk onto the socket
+            sentSize += chunk.size(); // update sent size after writing
+        }
+
+        if (sentSize == totalSize) {
+            qDebug() << "Send session all " << sentSize << " bytes queued";
             file -> close();
             delete file;
             file = nullptr;
-
-            fail("Sender session file ended early or could not be read");
-
-            socket -> disconnectFromHost();
-            return;
         }
-
-        socket -> write(chunk); // write chunk onto the socket
-        sentSize += chunk.size(); // update sent size after writing
-    }
-
-    if (sentSize == totalSize) {
-        qDebug() << "Send session all " << sentSize << " bytes queued";
-        file -> close();
-        delete file;
-        file = nullptr;
     }
 
     // we tell how much bytes left the socket by finding (sent bytes - still waiting in queue bytes)
