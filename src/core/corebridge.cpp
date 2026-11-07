@@ -8,14 +8,25 @@
 #include <QTcpServer>
 #include <QString>
 #include <QTcpSocket>
+#include <QDir>
+#include <QStandardPaths>
 
 // Constructor - member initializer list
 // I am instantiating the QObject and the QTcpServer objects here
 
-CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpServer (this))
+CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpServer (this)), receiveDir (QStandardPaths :: writableLocation(QStandardPaths :: DownloadLocation) + "/OneNode")
 {
     // connect server's signal to handler method
     connect(server, &QTcpServer :: newConnection, this, &CoreBridge :: handleNewConnection);
+
+    // removing partial and stale files on startup
+    QDir dir(receiveDir);
+    const QStringList leftOvers = dir.entryList(QStringList() << "*" + ReceiveSession :: partSuffix(), QDir :: Files);
+
+    for (const QString &name : leftOvers) {
+        qDebug() << "Removing stale and partial file: " << name;
+        dir.remove(name);
+    }
 }
 
 bool CoreBridge :: startListening()
@@ -51,7 +62,7 @@ void CoreBridge :: handleNewConnection()
     // Connect handle
     qDebug() << "A client has connected: " << prettyNetworkAddress(client -> peerAddress());
 
-    auto *receiveSession = new ReceiveSession(client, this); // We are now bringing in a new session with the new connection :)
+    auto *receiveSession = new ReceiveSession(client, receiveDir, this); // We are now bringing in a new session with the new connection :)
 
     // connecting signal of ReceiveSession with that of CoreBridge
 

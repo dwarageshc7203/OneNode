@@ -12,7 +12,13 @@ class ReceiveSession : public QObject
 
 public:
     explicit ReceiveSession (QTcpSocket *clientSocket, QObject *parent = nullptr);
+    explicit ReceiveSession (QTcpSocket *clientSocket, const QString &destinationDir, QObject *parent = nullptr); // constructor with the destination file path for file saving
     ~ReceiveSession() override; // destructor and with overriding power over CoreBridge
+
+    // helper function for the suffix for the file being written
+    static QString partSuffix() {
+        return QStringLiteral(".onenode-part"); // the suffix for the file being written
+    }
 
 signals:
     void progress(const QString &fileName, const qint64 done, const qint64 total);
@@ -32,6 +38,7 @@ private:
     QString finalPath; // Actual and valid name the file gets after completing all the checks
     QString currentName; // file name currently (.part or complete file)
     bool closing = false; // allows no other action ; much like operation is closed
+    const QString destinationDir; // destination folder
 
     //methods
 

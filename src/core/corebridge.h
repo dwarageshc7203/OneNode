@@ -25,6 +25,7 @@ private:
     // Objects and variables
 
     QTcpServer *server; // The engine
+    QString receiveDir; // the save directory on the receiver end
 
     // Methods
 

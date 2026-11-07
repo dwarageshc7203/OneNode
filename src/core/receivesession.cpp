@@ -14,7 +14,7 @@
 static QString uniquePath(const QString &path)
 {
     auto taken = [] (const QString &p) {
-        return QFileInfo :: exists(p) ||  QFileInfo :: exists(p + ".part");
+        return QFileInfo :: exists(p) ||  QFileInfo :: exists(p + ReceiveSession :: partSuffix());
     };
 
     if (!taken(path)) {
@@ -39,7 +39,7 @@ static QString uniquePath(const QString &path)
 }
 
 // Constructor
-ReceiveSession :: ReceiveSession (QTcpSocket *clientSocket, QObject *parent) : QObject(parent), socket(clientSocket) {
+ReceiveSession :: ReceiveSession (QTcpSocket *clientSocket, const QString &destinationDir, QObject *parent) : QObject(parent), socket(clientSocket), destinationDir (destinationDir) {
     qDebug() << "Session created for " << prettyNetworkAddress(socket -> peerAddress());
 
     connect(socket, &QTcpSocket :: readyRead, this, &ReceiveSession :: readData);
@@ -182,7 +182,7 @@ bool ReceiveSession :: handleHeader()
     qDebug() << "Session header is valid";
 
     // Initialization of Directory to save files
-    QString destination = QDir :: homePath() + "/Downloads/OneNode";
+    const QString &destination = destinationDir;
 
     QDir dir;
 
@@ -200,9 +200,9 @@ bool ReceiveSession :: handleHeader()
     finalPath = uniquePath(QDir(destination).filePath(fileName));
     qDebug() << "Final path: " << finalPath;
 
-    // creating the file (empty) ; .part refers to the file being partial and not fully written
+    // creating the file (empty) ; partSuffix() method writes the suffix .onenode-part : refers to the file being partial and not fully written
     // when the file writing is complete, we remove the .part suffix
-    incomingFile = new QFile(finalPath + ".part", this); // fixing the data leak with "this"-> when the parent method is deleted, the child object (this QFile) is also deleted(closed to be specific) along with it, making sure no data leak
+    incomingFile = new QFile(finalPath + partSuffix(), this); // fixing the data leak with "this"-> when the parent method is deleted, the child object (this QFile) is also deleted(closed to be specific) along with it, making sure no data leak
 
     if(!incomingFile -> open(QIODevice :: WriteOnly)) { // write failed
         const QString reason = incomingFile -> errorString();
