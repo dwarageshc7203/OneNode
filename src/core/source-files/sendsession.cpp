@@ -96,12 +96,19 @@ void SendSession :: sendMore()
                 return;
             }
 
+            hash.addData(chunk);
             socket -> write(chunk); // write chunk onto the socket
             sentSize += chunk.size(); // update sent size after writing
         }
 
         if (sentSize == totalSize) {
             qDebug() << "Send session all " << sentSize << " bytes queued";
+
+            QJsonObject trailer;
+            trailer["v"] = Protocol :: version;
+            trailer["type"] = "file_end";
+            trailer["sha256"] = QString :: fromLatin1(hash.result().toHex());
+            socket -> write(Protocol :: encodeFrame(trailer));
             file -> close();
             delete file;
             file = nullptr;
@@ -109,8 +116,11 @@ void SendSession :: sendMore()
     }
 
     // we tell how much bytes left the socket by finding (sent bytes - still waiting in queue bytes)
-    emit progress(fileName, qMax<qint64> (0, sentSize - socket -> bytesToWrite()), totalSize);
+    const qint64 done = qMax<qint64>(0, sentSize - socket -> bytesToWrite()); // bytes actually handed to the network, not just queued
 
+    if (progressThrottle.shouldEmit(done, totalSize)) {
+        emit progress(fileName, done, totalSize);
+    }
 }
 
 // checking out for a reply from the receiver - file received successfully or not

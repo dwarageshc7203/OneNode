@@ -1,10 +1,13 @@
 #ifndef RECEIVESESSION_H
 #define RECEIVESESSION_H
 
+#include "progressthrottle.h"
+
 #include <QObject>
 #include <QTcpSocket>
 #include <QFile>
 #include <QString>
+#include <QCryptographicHash>
 
 class ReceiveSession : public QObject
 {
@@ -33,12 +36,14 @@ private:
     qint64 receivedSize = 0; // Size of the image after receiving
     QByteArray receivedBuffer; // Stores the bytes of Header length prefix, JSON header and the body
     quint32 expectedHeaderSize = 0; // Stores the size of the JSON header
-    enum class State { AwaitPrefix, AwaitHeader, ReceiveBody}; // enum with 3 states
+    enum class State { AwaitPrefix, AwaitHeader, ReceiveBody, AwaitTrailer}; // enum with 4 states
+    QCryptographicHash hash {QCryptographicHash :: Sha256}; // fingerprint of the body bytes
     State state = State :: AwaitPrefix;
     QString finalPath; // Actual and valid name the file gets after completing all the checks
     QString currentName; // file name currently (.part or complete file)
     bool closing = false; // allows no other action ; much like operation is closed
     const QString destinationDir; // destination folder
+    ProgressThrottle progressThrottle;
 
     //methods
 
@@ -51,6 +56,7 @@ private:
     void readData();
     void sendResult(const QString &status, const QString &code = QString());
     void reject(const QString &code, const QString &reason);
+    bool handleTrailer(); // handles the trailer(file_end) after the body is received
 
 };
 

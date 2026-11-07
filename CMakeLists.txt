@@ -19,15 +19,15 @@ qt_add_qml_module(appOneNode
     QML_FILES
         qml/Main.qml
         SOURCES
-            src/core/corebridge.h
-            src/core/corebridge.cpp
-            src/core/receivesession.h
-            src/core/receivesession.cpp
-            src/core/sendsession.h
-            src/core/sendsession.cpp
-            src/core/protocol.h
-            src/core/protocol.cpp
-            SOURCES src/core/netutil.h
+            src/core/header-files/corebridge.h
+            src/core/source-files/corebridge.cpp
+            src/core/header-files/receivesession.h
+            src/core/source-files/receivesession.cpp
+            src/core/header-files/sendsession.h
+            src/core/source-files/sendsession.cpp
+            src/core/header-files/protocol.h
+            src/core/source-files/protocol.cpp
+            src/core/header-files/netutil.h
 
 )
 
@@ -45,6 +45,8 @@ set_target_properties(appOneNode PROPERTIES
 target_link_libraries(appOneNode
     PRIVATE Qt6::Quick Qt6::Network
 )
+
+target_include_directories(appOneNode PRIVATE ${PROJECT_SOURCE_DIR}/src/core/header-files)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(appOneNode PRIVATE -Wall -Wextra)

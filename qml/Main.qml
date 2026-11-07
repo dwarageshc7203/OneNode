@@ -47,7 +47,7 @@ Window {
         onClicked: {
             let success = core.startListening();
             console.log("Server started: ", success);
-            core.sendFile("127.0.0.1", "/tmp/hello.txt");
+            core.sendFile("127.0.0.1", "/tmp/big.bin");
         }
     }
 }

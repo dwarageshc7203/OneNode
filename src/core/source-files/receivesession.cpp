@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QString>
 #include <QJsonDocument>
+#include <QtEndian>
 
 // Finding the valid filename for the arriving file
 static QString uniquePath(const QString &path)
@@ -216,6 +217,8 @@ bool ReceiveSession :: handleHeader()
 
     expectedSize = fileSize;
     receivedSize = 0;
+
+    hash.reset();
     state = State :: ReceiveBody; // Change the value of state to ReceiveBody
 
     qDebug() << "Receiving " << fileName << " of size " << fileSize << " bytes";
@@ -264,14 +267,18 @@ bool ReceiveSession :: handleBody()
             return false;
         }
 
+        hash.addData(QByteArrayView(receivedBuffer.constData(), written)); // fingerprint the bytes we write
         receivedSize += written; // updating the written bytes
         receivedBuffer.remove(0,written);
 
-        emit progress (currentName, receivedSize, expectedSize);
+        if (progressThrottle.shouldEmit(receivedSize, expectedSize)) {
+            emit progress (currentName, receivedSize, expectedSize);
+        }
     }
 
     if (receivedSize == expectedSize) {
-        finishFile();
+        incomingFile -> close();
+        state = State :: AwaitTrailer;
         return true;
     }
     return false;
@@ -288,6 +295,9 @@ bool ReceiveSession :: processBuffer()
 
     case State :: ReceiveBody:
         return handleBody();
+
+    case State :: AwaitTrailer:
+        return handleTrailer();
     }
 
     return false;
@@ -332,4 +342,34 @@ void ReceiveSession :: reject(const QString &code, const QString &reason)
 
     sendResult("error", code);
     socket -> disconnectFromHost();
+}
+
+bool ReceiveSession :: handleTrailer()
+{
+    QJsonObject trailer;
+    const Protocol :: decodeStatus status = Protocol :: tryDecodeFrame(receivedBuffer, trailer);
+
+    if (status == Protocol :: decodeStatus :: NeedMoreData) {
+        return false;
+    }
+    if (status == Protocol :: decodeStatus :: Invalid) {
+        reject("invalid_header", "Invalid trailer frame");
+        return false;
+    }
+    if (trailer.value("type").toString() != "file_end" || !trailer.value("sha256").isString()) {
+        reject("invalid_header", "Trailer must be type file_end with a sha256 string");
+        return false;
+    }
+
+    const QString expected = trailer.value("sha256").toString().toLower();
+    const QString actual = QString :: fromLatin1(hash.result().toHex());
+
+    if (expected != actual) {
+        reject("checksum_mismatch", "Checksum mismatch: sender said " + expected + ", received file is " + actual);
+        return false;
+    }
+
+    qDebug() << "Checksum verified: " << actual;
+    finishFile(); // renames and replies ok
+    return false; // nothing more to parse for this file
 }

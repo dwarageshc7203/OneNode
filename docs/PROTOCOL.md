@@ -30,6 +30,11 @@ It contains two fields inturn:
     1. field "status": just gives either "ok" or "error" (String type)
     2. field "code": error string when error (String type)
 
+### 3. "file_end" (sender to receiver, after the body);
+    - field "sha256" - lowercase hex SHA 256 of the body bytes alone (String type)
+    - sent for all types of file, including empty ones
+
+
 ### Error codes:
 
 - invalid_header

@@ -1,10 +1,13 @@
 #ifndef SENDSESSION_H
 #define SENDSESSION_H
 
+#include "progressthrottle.h"
+
 #include <QObject>
 #include <QTcpSocket>
 #include <QString>
 #include <QFile>
+#include <QCryptographicHash>
 
 class SendSession : public QObject
 {
@@ -31,6 +34,8 @@ private:
     static constexpr qint64 maxQueuedBytes = 256 * 1024; // sets the upper limit on how much unwritten memory is allowed to sit in memory waiting for receiver
     QByteArray receivedBuffer; // to process the sending bytes
     bool reported = false; // status to check if the sending process is complete (can be either positive or negative)
+    ProgressThrottle progressThrottle;
+    QCryptographicHash hash { QCryptographicHash :: Sha256};
 
     //methods
 
