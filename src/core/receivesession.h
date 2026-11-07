@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QFile>
-#include <QtEndian>
 #include <QString>
 
 class ReceiveSession : public QObject

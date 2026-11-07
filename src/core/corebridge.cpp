@@ -3,15 +3,9 @@
 #include "sendsession.h"
 #include "protocol.h"
 
-#include <QTcpSocket>
 #include <QDebug>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonParseError>
-#include <QDir>
-#include <QFileInfo>
+#include <QTcpServer>
 #include <QString>
-#include <QFile>
 
 // Constructor - member initializer list
 // I am instantiating the QObject and the QTcpServer objects here

@@ -4,8 +4,6 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QJsonObject>
-#include <QJsonDocument>
-#include <QtEndian>
 
 // SendSession constructor
 SendSession :: SendSession (const QString &host, quint16 port, const QString &filePath, QObject *parent) : QObject(parent), socket(new QTcpSocket(this)), filePath(filePath), fileName(QFileInfo(filePath).fileName())

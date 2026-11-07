@@ -3,12 +3,7 @@
 
 #include <QObject>
 #include <QTcpServer>
-#include <QTcpSocket>
-#include <QList>
-#include <QFile>
-#include <QJsonObject>
-#include <QByteArray>
-#include <QtEndian>
+#include <QString>
 
 class CoreBridge : public QObject {
 
