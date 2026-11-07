@@ -52,8 +52,6 @@ void CoreBridge :: handleNewConnection()
         return;
     }
 
-    clients.append(client);
-
     // Connect handle
     qDebug() << "A client has connected: " << client -> peerAddress().toString();
 
@@ -66,10 +64,9 @@ void CoreBridge :: handleNewConnection()
     connect(receiveSession, &ReceiveSession :: failed, this, &CoreBridge :: transferFailed);
 
     // Disconnect handle
-    connect (client, &QTcpSocket :: disconnected, this, [this, client] {
+    connect (client, &QTcpSocket :: disconnected, this, [client] {
         qDebug() << "The client has disconnected: " << client -> peerAddress().toString();
 
-        clients.removeOne(client);
         client -> deleteLater();
     });
 }

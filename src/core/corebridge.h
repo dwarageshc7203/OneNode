@@ -30,7 +30,6 @@ private:
     // Objects and variables
 
     QTcpServer *server; // The engine
-    QList <QTcpSocket *> clients; // List of clients saved in memory
 
     // Methods
 
