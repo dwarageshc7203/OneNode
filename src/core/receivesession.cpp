@@ -1,5 +1,6 @@
 #include "receivesession.h"
 #include "protocol.h"
+#include "netutil.h"
 
 #include <QDebug>
 #include <QJsonParseError>
@@ -39,7 +40,7 @@ static QString uniquePath(const QString &path)
 
 // Constructor
 ReceiveSession :: ReceiveSession (QTcpSocket *clientSocket, QObject *parent) : QObject(parent), socket(clientSocket) {
-    qDebug() << "Session created for " << socket -> peerAddress().toString();
+    qDebug() << "Session created for " << prettyNetworkAddress(socket -> peerAddress());
 
     connect(socket, &QTcpSocket :: readyRead, this, &ReceiveSession :: readData);
     connect(socket, &QTcpSocket :: disconnected, this, &ReceiveSession :: onDisconnected);
@@ -148,7 +149,8 @@ bool ReceiveSession :: handleHeader()
 
     QString fileName = metaData.value("filename").toString();
     currentName = fileName;
-    qint64 fileSize = metaData.value("size").toInteger();
+    const QJsonValue sizeValue = metaData.value("size");
+    const qint64 fileSize = sizeValue.toInteger(-1); // converting the JSON value of size to Integer with a default value of -1 (for out of range numbers)
 
     // Validating fileName and preventing path traversal
     if (fileName.isEmpty()) {
@@ -156,8 +158,13 @@ bool ReceiveSession :: handleHeader()
         return false;
     }
 
+    if (!sizeValue.isDouble()) {
+        reject("invalid_header", "File size is not of Double type");
+        return false;
+    }
+
     if(fileSize < 0) {
-        reject("invalid_header", "File size is negative");
+        reject("invalid_header", "File size is not a whole number >= 0");
         return false;
     }
 

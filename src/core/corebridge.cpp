@@ -2,10 +2,12 @@
 #include "receivesession.h"
 #include "sendsession.h"
 #include "protocol.h"
+#include "netutil.h"
 
 #include <QDebug>
 #include <QTcpServer>
 #include <QString>
+#include <QTcpSocket>
 
 // Constructor - member initializer list
 // I am instantiating the QObject and the QTcpServer objects here
@@ -47,7 +49,7 @@ void CoreBridge :: handleNewConnection()
     }
 
     // Connect handle
-    qDebug() << "A client has connected: " << client -> peerAddress().toString();
+    qDebug() << "A client has connected: " << prettyNetworkAddress(client -> peerAddress());
 
     auto *receiveSession = new ReceiveSession(client, this); // We are now bringing in a new session with the new connection :)
 
@@ -59,7 +61,7 @@ void CoreBridge :: handleNewConnection()
 
     // Disconnect handle
     connect (client, &QTcpSocket :: disconnected, this, [client] {
-        qDebug() << "The client has disconnected: " << client -> peerAddress().toString();
+        qDebug() << "The client has disconnected: " << prettyNetworkAddress(client -> peerAddress());
 
         client -> deleteLater();
     });
