@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-  pull_request:
+    branches: [main] # CI pipelines in main alone is enough
+  pull_request: # it works normalls for all the PRs
 
 jobs:
   linux:

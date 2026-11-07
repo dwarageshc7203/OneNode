@@ -6,7 +6,7 @@
 
 namespace Protocol {
 
-constexpr int version = 1; // version of the app
+constexpr int version = 1; // protocol version
 constexpr quint32 maxHeaderSize = 16384; // 16 KiB header size
 constexpr quint16 defaultPort = 45454; // Port number for the sender and receiver
 
