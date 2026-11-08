@@ -30,7 +30,7 @@ static QJsonObject sampleHeader()
     return header;
 }
 
-// sencoding the header, then checking the decoded value with the original header to see if it's the same
+// encoding the header, then checking the decoded value with the original header to see if it's the same
 void TestProtocol :: roundTrip()
 {
     QByteArray buffer = Protocol :: encodeFrame(sampleHeader());

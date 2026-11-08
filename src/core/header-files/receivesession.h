@@ -16,7 +16,7 @@ class ReceiveSession : public QObject
 public:
     explicit ReceiveSession (QTcpSocket *clientSocket, QObject *parent = nullptr);
     explicit ReceiveSession (QTcpSocket *clientSocket, const QString &destinationDir, QObject *parent = nullptr); // constructor with the destination file path for file saving
-    ~ReceiveSession() override; // destructor and with overriding power over CoreBridge
+    ~ReceiveSession() override; // destructor
 
     // helper function for the suffix for the file being written
     static QString partSuffix() {
@@ -40,23 +40,23 @@ private:
     QCryptographicHash hash {QCryptographicHash :: Sha256}; // fingerprint of the body bytes
     State state = State :: AwaitPrefix;
     QString finalPath; // Actual and valid name the file gets after completing all the checks
-    QString currentName; // file name currently (.part or complete file)
+    QString currentName; // file name derived from the header
     bool closing = false; // allows no other action ; much like operation is closed
     const QString destinationDir; // destination folder
-    ProgressThrottle progressThrottle;
+    ProgressThrottle progressThrottle; // gate keeper that limits the amount of signal sent to QML
 
     //methods
 
-    void onDisconnected();
-    bool handlePrefix();
-    bool handleHeader();
-    void finishFile();
-    bool handleBody();
-    bool processBuffer();
-    void readData();
-    void sendResult(const QString &status, const QString &code = QString());
-    void reject(const QString &code, const QString &reason);
-    bool handleTrailer(); // handles the trailer(file_end) after the body is received
+    void onDisconnected(); // disconnection handle
+    bool handlePrefix(); // prefix handler
+    bool handleHeader(); // header handler
+    void finishFile(); // checks if the file is received successfully and handles file writing
+    bool handleBody(); // handles body bytes and hashing
+    bool processBuffer(); // switch case for different states (prefix, header, body, trailer)
+    void readData(); // managing and reading data on the socket and appending to buffer with condition
+    void sendResult(const QString &status, const QString &code = QString()); // sending acknowledgement to the sender
+    void reject(const QString &code, const QString &reason); // handles the failed signal and disconnects from sender
+    bool handleTrailer(); // handles the trailer(file_end) and checksum after the body is received
 
 };
 

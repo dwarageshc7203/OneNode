@@ -4,7 +4,8 @@
 #include <QHostAddress>
 #include <QString>
 
-// shows "127.0.0.1" instead of "::ffff:127.0.0.1" for IPv4 peers on a dual-stack socket
+// shows "127.0.0.1" instead of "::ffff:127.0.0.1" for IPv4 peers
+// also works for IPv6 peers
 inline QString prettyNetworkAddress(const QHostAddress &address)
 {
     bool isIPv4 = false;

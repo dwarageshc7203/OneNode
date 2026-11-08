@@ -18,6 +18,7 @@ QByteArray encodeFrame(const QJsonObject &header) {
     frame.append(json); // appends the json text into the frame byte array
     return frame;
 }
+
 // Ok -> header filling operation done and those filled bytes are removed from the buffer
 // NeedMoreData -> header filling operation incomplete and need more data
 // Invalid -> invalid header formed; should follow disconnect operation

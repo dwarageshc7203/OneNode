@@ -5,3 +5,5 @@
 2. Write [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 3. Update [README.md](README.md)
+
+4. 

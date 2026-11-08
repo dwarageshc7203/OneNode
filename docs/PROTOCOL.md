@@ -2,7 +2,11 @@
 
 ## Protocol Frame:
 
-`[4 bytes: N, unsigned, Big Endian][N bytes: UTF8 JSON header][body]`
+### Illustration:
+
+`[_____________prefix_____________][_______JSON header_______][______body_____][___trailer___]`
+<br/>
+`[4 bytes: N, unsigned, Big Endian][N bytes: UTF8 JSON header][S bytes: hashed][4 byte length]`
 
 where N is the header length in bytes
 
@@ -31,9 +35,10 @@ It contains two fields inturn:
     2. field "code": error string when error (String type)
 
 ### 3. "file_end" (sender to receiver, after the body);
-    - field "sha256" - lowercase hex SHA 256 of the body bytes alone (String type)
-    - sent for all types of file, including empty ones
-
+- contains one field:
+     
+    1. field "sha256" - lowercase hex SHA 256 of the body bytes alone (String type)
+        - sent for all types of file, including empty ones
 
 ### Error codes:
 
@@ -44,7 +49,7 @@ It contains two fields inturn:
     
 ## Rules
 
-- Header limit: 1 - 16383 bytes (16 KiB)
+- Header limit: 1 - 16384 bytes (16 KiB)
 - Receivers ignore the invalid header fields along with matching error code and close the same
 - Unknown type or unsupported "v" should be replied with error "unsupported" and closed
 - "ok" is sent only when the file is fully written and named properly

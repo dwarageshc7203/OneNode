@@ -57,17 +57,17 @@ ReceiveSession :: ~ReceiveSession()
     qDebug() << "Session Destroyed";
 }
 
-// Reads data once a connection is instantiated, and a session is created
+// called everytime when the bytes arrive
 void ReceiveSession :: readData()
 {
-    if (closing) {
-        socket -> readAll();
+    if (closing) { // we decided to stop
+        socket -> readAll(); // we are saving the bytes no where - just discarding the available bytes on the socket => to make sure we can maintain the connection and send the reply to sender
         return;
     }
 
     receivedBuffer.append(socket->readAll());
 
-    while (processBuffer()) {
+    while (processBuffer()) { // proceed with the next action with the current status
 
     }
 }
@@ -90,6 +90,7 @@ void ReceiveSession :: onDisconnected()
     deleteLater();
 }
 
+// prefix handler
 bool ReceiveSession :: handlePrefix()
 {
     if (receivedBuffer.size() < 4) { // header must be the length of size 4. we are removing instances where buffer hasn't collected enough data
@@ -108,8 +109,10 @@ bool ReceiveSession :: handlePrefix()
     return true;
 }
 
+// header handler
 bool ReceiveSession :: handleHeader()
 {
+    // waiting until we receive all the required bytes for the header
     if (receivedBuffer.size() < static_cast<qsizetype>(expectedHeaderSize)) {
         return false;
     }
@@ -154,11 +157,6 @@ bool ReceiveSession :: handleHeader()
     const qint64 fileSize = sizeValue.toInteger(-1); // converting the JSON value of size to Integer with a default value of -1 (for out of range numbers)
 
     // Validating fileName and preventing path traversal
-    if (fileName.isEmpty()) {
-        reject("invalid_filename", "Filename empty");
-        return false;
-    }
-
     if (!sizeValue.isDouble()) {
         reject("invalid_header", "File size is not of Double type");
         return false;
@@ -240,7 +238,7 @@ void ReceiveSession :: finishFile()
     state = State :: AwaitPrefix; // setting the bookmark to the first progress again - basically i am resetting it
 
     if (!QFile::rename(partPath, finalPath)) {
-        QFile :: remove(partPath); // removing the .part file (partially written file) from the disk
+        QFile :: remove(partPath); // removing the .onenode-part file (partially written file) from the disk
         reject("write_failed", "Could not rename " + partPath + " to " + finalPath);
         return;
     }
@@ -344,25 +342,29 @@ void ReceiveSession :: reject(const QString &code, const QString &reason)
     socket -> disconnectFromHost();
 }
 
+// handles the protocol's file_end
 bool ReceiveSession :: handleTrailer()
 {
     QJsonObject trailer;
-    const Protocol :: decodeStatus status = Protocol :: tryDecodeFrame(receivedBuffer, trailer);
+    const Protocol :: decodeStatus status = Protocol :: tryDecodeFrame(receivedBuffer, trailer); // send the bytes from the buffer, decode that, and place it in the JSON object trailer
 
-    if (status == Protocol :: decodeStatus :: NeedMoreData) {
+    if (status == Protocol :: decodeStatus :: NeedMoreData) { // waiting for more data
         return false;
     }
+
     if (status == Protocol :: decodeStatus :: Invalid) {
         reject("invalid_header", "Invalid trailer frame");
         return false;
     }
+    
+    //we need the type "file_end" with the value of "sha256" as String for the trailer. Else, invalid
     if (trailer.value("type").toString() != "file_end" || !trailer.value("sha256").isString()) {
         reject("invalid_header", "Trailer must be type file_end with a sha256 string");
         return false;
     }
 
-    const QString expected = trailer.value("sha256").toString().toLower();
-    const QString actual = QString :: fromLatin1(hash.result().toHex());
+    const QString expected = trailer.value("sha256").toString().toLower(); // sender's claim; normalizing to lowercase to compare (hexadecimal is case insensitive, we can use uppercase too)
+    const QString actual = QString :: fromLatin1(hash.result().toHex()); // returns the fingerprint as hex by converting the ByteArray into QString
 
     if (expected != actual) {
         reject("checksum_mismatch", "Checksum mismatch: sender said " + expected + ", received file is " + actual);
@@ -371,5 +373,5 @@ bool ReceiveSession :: handleTrailer()
 
     qDebug() << "Checksum verified: " << actual;
     finishFile(); // renames and replies ok
-    return false; // nothing more to parse for this file
+    return false;
 }

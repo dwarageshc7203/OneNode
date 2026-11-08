@@ -15,7 +15,7 @@ class SendSession : public QObject
 
 public:
     explicit SendSession (const QString &host, quint16 port, const QString &filePath, QObject *parent = nullptr);
-    ~SendSession() override; // destructor and with overriding power over CoreBridge
+    ~SendSession() override; // destructor
 
 signals:
     void progress(const QString &fileName, const qint64 done, const qint64 total);
@@ -33,18 +33,18 @@ private:
     static constexpr qint64 chunkSize = 64 * 1024; // 64 KiB per chunk - slice of data accessed in a particular iteration
     static constexpr qint64 maxQueuedBytes = 256 * 1024; // sets the upper limit on how much unwritten memory is allowed to sit in memory waiting for receiver
     QByteArray receivedBuffer; // to process the sending bytes
-    bool reported = false; // status to check if the sending process is complete (can be either positive or negative)
-    ProgressThrottle progressThrottle;
-    QCryptographicHash hash { QCryptographicHash :: Sha256};
+    bool reported = false; // status to signal outcome has been reported
+    ProgressThrottle progressThrottle; // gate keeper that limits the number of signal to QML
+    QCryptographicHash hash { QCryptographicHash :: Sha256}; // 
 
     //methods
 
     void onConnected(); // new connection
-    void onDisconnected(); // disconnection signal
+    void onDisconnected(); // disconnection handle
     void onSocketError(QAbstractSocket :: SocketError error); // catches sender errors
     void sendMore(); // signal to send bytes when some bytes left the queue
     void onReadyRead(); // activates whenever there is any bytes on the buffer
-    void fail(const QString &reason);
+    void fail(const QString &reason); // handles the failed signal and updates the report variable (operation status handling)
 
 };
 

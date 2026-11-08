@@ -18,7 +18,7 @@ SendSession :: SendSession (const QString &host, quint16 port, const QString &fi
     socket -> connectToHost(host, port);
 }
 
-// destructor hahaha
+// destructor
 SendSession :: ~SendSession()
 {
     qDebug() << "Sender session destroyed";
@@ -61,7 +61,7 @@ void SendSession :: onConnected()
 
 void SendSession :: onDisconnected()
 {
-    fail("Sender Session disconnected before reply; transfer failed");
+    fail("Sender session disconnected before reply; transfer failed");
     deleteLater();
 }
 
@@ -102,7 +102,7 @@ void SendSession :: sendMore()
         }
 
         if (sentSize == totalSize) {
-            qDebug() << "Send session all " << sentSize << " bytes queued";
+            qDebug() << "Sender session all " << sentSize << " bytes queued";
 
             QJsonObject trailer;
             trailer["v"] = Protocol :: version;
@@ -169,6 +169,6 @@ void SendSession :: fail(const QString &reason)
     }
 
     reported = true;
-    qDebug() << "Send session failed: " << reason;
+    qDebug() << "Sender session failed: " << reason;
     emit failed(fileName, reason);
 }
