@@ -10,55 +10,65 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Network)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-qt_add_executable(appOneNode
-    src/main.cpp
+# The core: everything that is not UI. The app, the CLI and the tests all link this one library.
+# STATIC compiles all these cpp files into one archive
+
+add_library(onenode_core STATIC
+    src/core/source-files/corebridge.cpp
+    src/core/source-files/protocol.cpp
+    src/core/source-files/receivesession.cpp
+    src/core/source-files/sendsession.cpp
+    src/core/header-files/corebridge.h
+    src/core/header-files/netutil.h
+    src/core/header-files/progressthrottle.h
+    src/core/header-files/protocol.h
+    src/core/header-files/receivesession.h
+    src/core/header-files/sendsession.h
 )
 
+# PUBLIC - anyone can access
+target_include_directories(onenode_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/core/header-files)
+target_link_libraries(onenode_core PUBLIC Qt6::Network)
+
+# PRIVATE - only I can use it
+# contains the CLI's source file with the core
+qt_add_executable(onenode-cli src/cli/main.cpp)
+target_link_libraries(onenode-cli PRIVATE onenode_core)
+
+# GUI program bundled as OneNode so main.cpp load it by name instead of file path
+qt_add_executable(appOneNode src/main.cpp)
 qt_add_qml_module(appOneNode
     URI OneNode
-    QML_FILES
-        qml/Main.qml
-        SOURCES
-            src/core/header-files/corebridge.h
-            src/core/source-files/corebridge.cpp
-            src/core/header-files/receivesession.h
-            src/core/source-files/receivesession.cpp
-            src/core/header-files/sendsession.h
-            src/core/source-files/sendsession.cpp
-            src/core/header-files/protocol.h
-            src/core/source-files/protocol.cpp
-            src/core/header-files/netutil.h
-
+    QML_FILES qml/Main.qml
 )
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
+# for MacOS and Windows, not linux
 set_target_properties(appOneNode PROPERTIES
-#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appOneNode
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION} # writes version number into the app's label over the bundle on Mac
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE # for Mac, makes an .app instead of loose executable
+    WIN32_EXECUTABLE TRUE # for Windows, builds GUI
 )
 
-target_link_libraries(appOneNode
-    PRIVATE Qt6::Quick Qt6::Network
-)
-
-target_include_directories(appOneNode PRIVATE ${PROJECT_SOURCE_DIR}/src/core/header-files)
+# linking Qt Quick and core
+target_link_libraries(appOneNode PRIVATE Qt6::Quick onenode_core)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(appOneNode PRIVATE -Wall -Wextra)
 endif()
 
 include(GNUInstallDirs)
+
+#rules for cmake --install
 install(TARGETS appOneNode
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+#switches on CTest
 enable_testing()
+
+#runs tests/CMakeLists.txt
 add_subdirectory(tests)
 

@@ -1,7 +1,6 @@
 #include "corebridge.h"
 #include "receivesession.h"
 #include "sendsession.h"
-#include "protocol.h"
 #include "netutil.h"
 
 #include <QDebug>
@@ -15,7 +14,25 @@
 CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpServer (this)), receiveDir (QStandardPaths :: writableLocation(QStandardPaths :: DownloadLocation) + "/OneNode")
 {
     // connect server's signal to handler method
-    connect(server, &QTcpServer :: newConnection, this, &CoreBridge :: handleNewConnection);
+    connect(server, &QTcpServer :: newConnection, this, &CoreBridge :: handleNewConnection);    
+}
+
+void CoreBridge :: setReceiveDir(const QString &dir)
+{
+    receiveDir = dir;
+}
+
+QString CoreBridge :: receiveFolder() const
+{
+    return receiveDir;
+}
+
+// app startup function
+bool CoreBridge :: startListening(quint16 port)
+{
+    if (!server -> listen(QHostAddress :: Any, port)) { // if the port is busy or held by other tasks
+        return false;
+    }
 
     // removing partial and stale files on startup
     QDir dir(receiveDir);
@@ -25,12 +42,8 @@ CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpS
         qDebug() << "Removing stale and partial file: " << name;
         dir.remove(name); // deleting those files
     }
-}
 
-// app startup function
-bool CoreBridge :: startListening()
-{
-    return server -> listen (QHostAddress :: Any, Protocol :: defaultPort); // default port is 45454 on both the sender and receiver end
+    return true;
 }
 
 // app quit function
@@ -40,9 +53,9 @@ void CoreBridge :: stopListening()
 }
 
 // instantiates the SendSession module with the arguments and signals
-void CoreBridge :: sendFile(const QString &host, const QString &filePath)
+void CoreBridge :: sendFile(const QString &host, const QString &filePath, quint16 port)
 {
-    auto *sendSession = new SendSession(host, Protocol :: defaultPort, filePath, this); // calls out SenderSession
+    auto *sendSession = new SendSession(host, port, filePath, this); // calls out SenderSession
 
     // connecting signal of SendSession with that of CoreBridge
 

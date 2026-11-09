@@ -1,6 +1,8 @@
 #ifndef COREBRIDGE_H
 #define COREBRIDGE_H
 
+#include "protocol.h"
+
 #include <QObject>
 #include <QTcpServer>
 #include <QString>
@@ -11,9 +13,12 @@ class CoreBridge : public QObject {
 
 public:
     explicit CoreBridge (QObject *parent = nullptr);
-    Q_INVOKABLE bool startListening(); // app startup function
+    Q_INVOKABLE bool startListening(quint16 port = Protocol :: defaultPort); // app startup function
     Q_INVOKABLE void stopListening(); // app quit function
-    Q_INVOKABLE void sendFile(const QString &host, const QString &filePath); // core file transfer logic starts here
+    Q_INVOKABLE void sendFile(const QString &host, const QString &filePath, quint16 port = Protocol :: defaultPort); // core file transfer logic starts here
+
+    void setReceiveDir(const QString &dir); // to set the destination directory
+    QString receiveFolder() const;  // the folder where the receiver gets his files
 
 signals:
     void transferProgress(const QString &fileName, qint64 done, qint64 total);
