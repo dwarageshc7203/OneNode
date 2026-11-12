@@ -37,9 +37,31 @@ target_link_libraries(onenode-cli PRIVATE onenode_core)
 
 # GUI program bundled as OneNode so main.cpp load it by name instead of file path
 qt_add_executable(appOneNode src/main.cpp)
+set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 qt_add_qml_module(appOneNode
     URI OneNode
-    QML_FILES qml/Main.qml
+    QML_FILES
+        qml/Main.qml
+        qml/Theme.qml
+        qml/AppButton.qml
+        qml/AppSwitch.qml
+        qml/Card.qml
+        qml/Toast.qml
+        qml/TransferRow.qml
+        qml/HomePage.qml
+        qml/SendPage.qml
+        qml/SettingsPage.qml
+)
+
+# fonts
+qt_add_resources(appOneNode "fonts"
+    PREFIX "/fonts"
+    BASE qml/fonts
+    FILES
+        qml/fonts/Inter-Regular.otf
+        qml/fonts/Inter-Medium.otf
+        qml/fonts/Inter-SemiBold.otf
+        qml/fonts/Inter-Bold.otf
 )
 
 # for MacOS and Windows, not linux
