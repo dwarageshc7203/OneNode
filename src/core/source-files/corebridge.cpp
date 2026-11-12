@@ -9,6 +9,7 @@
 #include <QTcpSocket>
 #include <QDir>
 #include <QStandardPaths>
+#include <QFileInfo>
 
 // Constructor - member initializer list
 CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpServer (this)), receiveDir (QStandardPaths :: writableLocation(QStandardPaths :: DownloadLocation) + "/OneNode")
@@ -25,6 +26,21 @@ void CoreBridge :: setReceiveDir(const QString &dir)
 QString CoreBridge :: receiveFolder() const
 {
     return receiveDir;
+}
+
+quint64 CoreBridge :: listeningPort() const
+{
+    return server -> serverPort(); // returns 0 when server is not listening
+}
+
+void CoreBridge :: announce (quint64 id, const QString &fileName, Direction direction, qint64 total)
+{
+    if (announced.contains(id)) { // checking if process is already started or no
+        return;
+    }
+
+    announced.insert(id); // storing id when starting the transfer process
+    emit transferStarted(id, fileName, direction, total);
 }
 
 // app startup function
@@ -55,13 +71,30 @@ void CoreBridge :: stopListening()
 // instantiates the SendSession module with the arguments and signals
 void CoreBridge :: sendFile(const QString &host, const QString &filePath, quint16 port)
 {
+    const quint64 id = nextId ++;
     auto *sendSession = new SendSession(host, port, filePath, this); // calls out SenderSession
 
     // connecting signal of SendSession with that of CoreBridge
 
-    connect(sendSession, &SendSession :: progress, this, &CoreBridge :: transferProgress);
-    connect(sendSession, &SendSession :: finished, this, &CoreBridge :: transferFinished);
-    connect(sendSession, &SendSession :: failed, this, &CoreBridge :: transferFailed);
+    const QFileInfo info (filePath);
+    announce (id, info.fileName(), Direction :: Send, info.size());
+
+    connect(sendSession, &SendSession :: progress, this, [this, id] (const QString &fileName, qint64 done, qint64 total)
+    {
+        emit transferProgress(id, fileName, done, total);
+    });
+
+    connect(sendSession, &SendSession :: finished, this, [this, id] (const QString &fileName)
+    {
+        emit transferFinished(id, fileName);
+        announced.remove(id); // process id finished, so remove it
+    });
+
+    connect(sendSession, &SendSession :: failed, this, [this, id] (const QString &fileName, const QString &reason)
+    {
+        emit transferFailed(id, fileName, reason);
+        announced.remove(id); // process id finished, so remove it
+    });
 }
 
 void CoreBridge :: handleNewConnection()
@@ -76,12 +109,29 @@ void CoreBridge :: handleNewConnection()
     // Connect handle
     qDebug() << "A client has connected: " << prettyNetworkAddress(client -> peerAddress());
 
+    const quint64 id = nextId ++; // creating the new unique id
     auto *receiveSession = new ReceiveSession(client, receiveDir, this); // start the ReceiveSession instance with the arguments
 
     // connecting signal of ReceiveSession with that of CoreBridge
-    connect(receiveSession, &ReceiveSession :: progress, this, &CoreBridge :: transferProgress);
-    connect(receiveSession, &ReceiveSession :: finished, this, &CoreBridge :: transferFinished);
-    connect(receiveSession, &ReceiveSession :: failed, this, &CoreBridge :: transferFailed);
+    connect(receiveSession, &ReceiveSession :: progress, this, [this, id] (const QString &fileName, qint64 done, qint64 total)
+    {
+        announce (id, fileName, Direction :: Receive, total);
+        emit transferProgress(id, fileName, done, total);
+    });
+
+    connect(receiveSession, &ReceiveSession :: finished, this, [this, id] (const QString &fileName)
+    {
+        announce (id, fileName, Direction :: Receive, 0);
+        emit transferFinished(id, fileName);
+        announced.remove(id); // process id finished, so remove it
+    });
+
+    connect(receiveSession, &ReceiveSession :: failed, this, [this, id] (const QString &fileName, const QString &reason)
+    {
+        announce (id, fileName, Direction :: Receive, 0);
+        emit transferFailed(id, fileName, reason);
+        announced.remove(id); // process id finished, so remove it
+    });
 
     // Disconnect handle
     connect (client, &QTcpSocket :: disconnected, this, [client] {

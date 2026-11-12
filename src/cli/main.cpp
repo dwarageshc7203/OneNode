@@ -45,8 +45,12 @@ int main(int argc, char *argv[])
 
     CoreBridge bridge;
 
+    QObject :: connect(&bridge, &CoreBridge :: transferStarted, [&out] (quint64 id, const QString &name, CoreBridge :: Direction direction, qint64 total) {
+        out << (direction == CoreBridge :: Direction :: Send ? "Sending" : "Receiving") << " #" << id << ": " << name << " (" << total << " bytes)\n" << Qt :: flush;
+    });
+
     // progress is already throttled inside the sessions, so printing every event is fine
-    QObject :: connect(&bridge, &CoreBridge :: transferProgress, [&out] (const QString &name, qint64 done, qint64 total) {
+    QObject :: connect(&bridge, &CoreBridge :: transferProgress, [&out] (quint64, const QString &name, qint64 done, qint64 total) {
         const int percent = total > 0 ? static_cast<int>(done * 100 / total) : 100;
         out << "\r" << name << "  " << percent << "%  (" << done << " / " << total << " bytes)" << Qt :: flush;
     });
@@ -57,11 +61,11 @@ int main(int argc, char *argv[])
             return 2;
         }
 
-        QObject :: connect(&bridge, &CoreBridge :: transferFinished, [&out] (const QString &name) {
+        QObject :: connect(&bridge, &CoreBridge :: transferFinished, [&out] (quint64, const QString &name) {
             out << "\nSent: " << name << "\n" << Qt :: flush;
             QCoreApplication :: exit(0);
         });
-        QObject :: connect(&bridge, &CoreBridge :: transferFailed, [&err] (const QString &name, const QString &reason) {
+        QObject :: connect(&bridge, &CoreBridge :: transferFailed, [&err] (quint64, const QString &name, const QString &reason) {
             err << "\nFailed: " << name << " | " << reason << "\n" << Qt :: flush;
             QCoreApplication :: exit(1);
         });
@@ -75,10 +79,10 @@ int main(int argc, char *argv[])
             bridge.setReceiveDir(parser.value(destOption));
         }
 
-        QObject :: connect(&bridge, &CoreBridge :: transferFinished, [&out] (const QString &name) {
+        QObject :: connect(&bridge, &CoreBridge :: transferFinished, [&out] (quint64, const QString &name) {
             out << "\nReceived: " << name << "\n" << Qt :: flush;
         });
-        QObject :: connect(&bridge, &CoreBridge :: transferFailed, [&err] (const QString &name, const QString &reason) {
+        QObject :: connect(&bridge, &CoreBridge :: transferFailed, [&err] (quint64, const QString &name, const QString &reason) {
             err << "\nFailed: " << name << " | " << reason << "\n" << Qt :: flush;
         });
 

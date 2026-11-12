@@ -12,16 +12,17 @@ Window {
     Connections {
 
         target: core
-        function onTransferProgress(name, done, total) {
-            console.log("Progress: ", name, " : ", done, " / ", total );
+        function onTransferStarted(id, name, direction, total) {
+            console.log("Started #", id, ": ", name, " | direction: ", direction, " | size: ", total);
         }
-
-        function onTransferFinished(name) {
-            console.log("Finished: ", name);
+        function onTransferProgress(id, name, done, total) {
+            console.log("Progress #", id, ": ", name, " : ", done, " / ", total );
         }
-
-        function onTransferFailed(name, reason) {
-            console.log("Failed: ", name, " | reason: ", reason);
+        function onTransferFinished(id, name) {
+            console.log("Finished #", id, ": ", name);
+        }
+        function onTransferFailed(id, name, reason) {
+            console.log("Failed #", id, ": ", name, " | reason: ", reason);
         }
 
     }
