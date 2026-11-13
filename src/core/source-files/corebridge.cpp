@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QStandardPaths>
 #include <QFileInfo>
+#include <QNetworkInterface>
 
 // Constructor - member initializer list
 CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpServer (this)), receiveDir (QStandardPaths :: writableLocation(QStandardPaths :: DownloadLocation) + "/OneNode")
@@ -33,14 +34,34 @@ quint64 CoreBridge :: listeningPort() const
     return server -> serverPort(); // returns 0 when server is not listening
 }
 
-void CoreBridge :: announce (quint64 id, const QString &fileName, Direction direction, qint64 total)
+void CoreBridge :: announce (quint64 id, const QString &fileName, Direction direction, qint64 total, const QString &peer)
 {
     if (announced.contains(id)) { // checking if process is already started or no
         return;
     }
 
     announced.insert(id); // storing id when starting the transfer process
-    emit transferStarted(id, fileName, direction, total);
+    emit transferStarted(id, fileName, direction, total, peer);
+}
+
+// The address another device on the same network should type in to reach us.
+// Prefers a private LAN address (192.168.x.x, 10.x.x.x, 172.16-31.x.x) over anything else.
+QString CoreBridge :: localAddress() const
+{
+    QString fallback;
+    for (const QHostAddress &address : QNetworkInterface :: allAddresses()) {
+        if (address.protocol() != QAbstractSocket :: IPv4Protocol || address.isLoopback()) {
+            continue; // only real IPv4 addresses
+        }
+        if (address.isInSubnet(QHostAddress("192.168.0.0"), 16) || address.isInSubnet(QHostAddress("10.0.0.0"), 8)
+            || address.isInSubnet(QHostAddress("172.16.0.0"), 12)) {
+            return address.toString();
+        }
+        if (fallback.isEmpty()) {
+            fallback = address.toString();
+        }
+    }
+    return fallback; // empty when there is no network at all
 }
 
 // app startup function
@@ -77,7 +98,7 @@ void CoreBridge :: sendFile(const QString &host, const QString &filePath, quint1
     // connecting signal of SendSession with that of CoreBridge
 
     const QFileInfo info (filePath);
-    announce (id, info.fileName(), Direction :: Send, info.size());
+    announce (id, info.fileName(), Direction :: Send, info.size(), host);
 
     connect(sendSession, &SendSession :: progress, this, [this, id] (const QString &fileName, qint64 done, qint64 total)
     {
@@ -107,28 +128,29 @@ void CoreBridge :: handleNewConnection()
     }
 
     // Connect handle
-    qDebug() << "A client has connected: " << prettyNetworkAddress(client -> peerAddress());
+    const QString peer = prettyNetworkAddress(client -> peerAddress()); // who is sending to us
+    qDebug() << "A client has connected: " << peer;
 
     const quint64 id = nextId ++; // creating the new unique id
     auto *receiveSession = new ReceiveSession(client, receiveDir, this); // start the ReceiveSession instance with the arguments
 
     // connecting signal of ReceiveSession with that of CoreBridge
-    connect(receiveSession, &ReceiveSession :: progress, this, [this, id] (const QString &fileName, qint64 done, qint64 total)
+    connect(receiveSession, &ReceiveSession :: progress, this, [this, id, peer] (const QString &fileName, qint64 done, qint64 total)
     {
-        announce (id, fileName, Direction :: Receive, total);
+        announce (id, fileName, Direction :: Receive, total, peer);
         emit transferProgress(id, fileName, done, total);
     });
 
-    connect(receiveSession, &ReceiveSession :: finished, this, [this, id] (const QString &fileName)
+    connect(receiveSession, &ReceiveSession :: finished, this, [this, id, peer] (const QString &fileName)
     {
-        announce (id, fileName, Direction :: Receive, 0);
+        announce (id, fileName, Direction :: Receive, 0, peer);
         emit transferFinished(id, fileName);
         announced.remove(id); // process id finished, so remove it
     });
 
-    connect(receiveSession, &ReceiveSession :: failed, this, [this, id] (const QString &fileName, const QString &reason)
+    connect(receiveSession, &ReceiveSession :: failed, this, [this, id, peer] (const QString &fileName, const QString &reason)
     {
-        announce (id, fileName, Direction :: Receive, 0);
+        announce (id, fileName, Direction :: Receive, 0, peer);
         emit transferFailed(id, fileName, reason);
         announced.remove(id); // process id finished, so remove it
     });

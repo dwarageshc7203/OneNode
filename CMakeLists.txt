@@ -24,6 +24,8 @@ add_library(onenode_core STATIC
     src/core/header-files/protocol.h
     src/core/header-files/receivesession.h
     src/core/header-files/sendsession.h
+    src/core/header-files/transfermodel.h
+    src/core/source-files/transfermodel.cpp
 )
 
 # PUBLIC - anyone can access

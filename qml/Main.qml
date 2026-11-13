@@ -20,28 +20,43 @@ ApplicationWindow {
     property int page: 0
 
     // ---- the real core ----
-    // For now it only listens for incoming files and writes what happens to the Qt Creator output.
-    // The screens still show pretend data; connecting them to the core is the next step.
-    CoreBridge { id: core }
-    Component.onCompleted: core.startListening()
+    // main.cpp creates the core (CoreBridge) and the transfer list (TransferModel) and hands them to this window.
+    // "required" means: the window refuses to start without them.
+    required property var core
+    required property var transfers
+
+    property bool listening: false // did the core manage to open its port?
+    property string address: ""    // "192.168.1.23:45454": what the other device must type in
+
+    Component.onCompleted: {
+        listening = core.startListening()
+        address = (core.localAddress() || "no network") + ":" + core.listeningPort()
+    }
+
+    // The toast ("notification") for files that arrive. Sending shows no toast: you started it yourself.
+    // The transfer list itself is NOT updated here: TransferModel listens to the core by itself.
+    property var receiving: ({}) // ids of the transfers that are coming IN, so "finished" can tell which kind it was
 
     Connections {
-        target: core
+        target: window.core
 
-        function onTransferStarted(id, name, direction, total) {
-            console.log("Started #", id, ": ", name, " | direction: ", direction, " | size: ", total);
-        }
-
-        function onTransferProgress(id, name, done, total) {
-            console.log("Progress #", id, ": ", name, " : ", done, " / ", total);
+        function onTransferStarted(id, name, direction, total, peer) {
+            if (direction === CoreBridge.Receive) {
+                window.receiving[id] = true
+                toast.show(peer + " is sending " + name)
+            }
         }
 
         function onTransferFinished(id, name) {
-            console.log("Finished #", id, ": ", name);
+            if (window.receiving[id]) {
+                delete window.receiving[id]
+                toast.show("Received " + name)
+            }
         }
 
         function onTransferFailed(id, name, reason) {
-            console.log("Failed #", id, ": ", name, " | reason: ", reason);
+            delete window.receiving[id]
+            toast.show("Failed: " + name + " (" + reason + ")")
         }
     }
 
@@ -100,6 +115,9 @@ ApplicationWindow {
 
         HomePage {
             objectName: "homePage"
+            transfers: window.transfers
+            listening: window.listening
+            address: window.address
             onSendRequested: window.page = 1
             onNotify: (message) => toast.show(message)
         }

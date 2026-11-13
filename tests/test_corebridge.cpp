@@ -97,6 +97,23 @@ private:
     }
 
 private slots:
+    // the started signal tells the screen WHO the other device is
+    void startedCarriesThePeerAddress()
+    {
+        CoreBridge receiver;
+        receiver.setReceiveDir(tempDir.path() + "/inbox");
+        QVERIFY(receiver.startListening(0));
+        QSignalSpy receiverSpy(&receiver, &CoreBridge :: transferStarted);
+
+        CoreBridge sender;
+        QSignalSpy senderSpy(&sender, &CoreBridge :: transferStarted);
+        sender.sendFile("127.0.0.1", makeFile("peer.bin", 1000), receiver.listeningPort());
+
+        QTRY_COMPARE_WITH_TIMEOUT(receiverSpy.count(), 1, 5000);
+        QCOMPARE(senderSpy.first().at(4).toString(), QString("127.0.0.1"));   // we sent TO this address
+        QCOMPARE(receiverSpy.first().at(4).toString(), QString("127.0.0.1")); // we received FROM this address (not "::ffff:127.0.0.1")
+    }
+
     void idsAreUniqueAndStartedComesFirst()
     {
         CoreBridge receiver;

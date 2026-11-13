@@ -21,14 +21,15 @@ public:
     Q_INVOKABLE void stopListening(); // app quit function
     Q_INVOKABLE void sendFile(const QString &host, const QString &filePath, quint16 port = Protocol :: defaultPort); // core file transfer logic starts here
     QString receiveFolder() const;  // the folder where the receiver gets his files
-    quint64 listeningPort() const; // the actual listening port
+    Q_INVOKABLE quint64 listeningPort() const; // the actual listening port (0 when not listening)
+    Q_INVOKABLE QString localAddress() const; // this machine's address on the local network, for the other device to type in
 
     void setReceiveDir(const QString &dir); // to set the destination directory
 
 
 
 signals:
-    void transferStarted (quint64 id, const QString &fileName, CoreBridge :: Direction direction, qint64 total);
+    void transferStarted (quint64 id, const QString &fileName, CoreBridge :: Direction direction, qint64 total, const QString &peer); // peer = the other device's address
     void transferProgress (quint64 id, const QString &fileName, qint64 done, qint64 total);
     void transferFinished (quint64 id, const QString &fileName);
     void transferFailed (quint64 id, const QString &fileName, const QString &reason);
@@ -43,7 +44,7 @@ private:
 
     // Methods
     void handleNewConnection(); // This method creates a new session using ReceiveSession
-    void announce (quint64 id, const QString &fileName, Direction direction, qint64 total);
+    void announce (quint64 id, const QString &fileName, Direction direction, qint64 total, const QString &peer);
 };
 
 #endif // COREBRIDGE_H

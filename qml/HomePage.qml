@@ -6,7 +6,8 @@ import QtQuick.Layouts
 // and the list of transfers. Files that arrive from other devices show up here as new rows plus a toast,
 // so no extra "receiver" screen is needed after the first connection.
 //
-// NOTE: everything on this page is PRETEND DATA for now. The real core will replace it in the next step.
+// The transfer list is real: it comes from TransferModel (see main.cpp). The drop zone and "Choose files" still lead
+// to the pretend Send page: they become real in the next step.
 Item {
     id: page
 
@@ -14,46 +15,10 @@ Item {
     signal sendRequested()
     signal notify(string message)
 
-    // pretend values (later they come from the core)
-    property string deviceName: "Victus"
-    property string address: "192.168.1.23:45454"
-
-    // pretend transfers. Each ListElement is one row; its names must match the "required property" names in TransferRow.
-    ListModel {
-        id: transfers
-        ListElement { fileName: "holiday-video-final-edit-v3.mp4"; peer: "Anna's laptop"; direction: "receive"; status: "active"; done: 412000000; total: 980000000; error: "" }
-        ListElement { fileName: "thesis-final.pdf"; peer: "Pixel 8"; direction: "send"; status: "done"; done: 8400000; total: 8400000; error: "" }
-        ListElement { fileName: "notes.txt"; peer: "Anna's laptop"; direction: "send"; status: "failed"; done: 0; total: 1200; error: "Connection refused" }
-    }
-
-    // DEV ONLY: pretends that a device sends us a file, to see the row and the toast. Remove when the core is connected.
-    function simulateIncoming() {
-        if (simTimer.running) {
-            return
-        }
-        transfers.insert(0, { fileName: "photo-from-anna.jpg", peer: "Anna's laptop", direction: "receive",
-                              status: "active", done: 0, total: 4200000, error: "" })
-        page.notify("Anna's laptop is sending photo-from-anna.jpg")
-        simTimer.start()
-    }
-
-    Timer {
-        id: simTimer
-        interval: 120
-        repeat: true
-        onTriggered: {
-            const row = transfers.get(0)
-            const next = row.done + 350000
-            if (next >= row.total) {
-                transfers.setProperty(0, "done", row.total)
-                transfers.setProperty(0, "status", "done")
-                stop()
-                page.notify("Received photo-from-anna.jpg")
-            } else {
-                transfers.setProperty(0, "done", next)
-            }
-        }
-    }
+    // given by Main.qml
+    required property var transfers // the list of transfers (a TransferModel)
+    property bool listening: false  // is the core waiting for incoming files?
+    property string address: ""     // "192.168.1.23:45454": what the other device must type in
 
     // The content column. On a wide window it stops growing at Theme.maxContentWidth and stays centered;
     // on a narrow window it shrinks to fit, keeping a margin at each side.
@@ -73,14 +38,14 @@ Item {
                 Layout.fillWidth: true
                 spacing: Theme.space3
 
-                Rectangle { // the green dot
+                Rectangle { // green dot when listening, red when the port could not be opened
                     Layout.preferredWidth: 10
                     Layout.preferredHeight: 10
                     radius: 5
-                    color: Theme.accent
+                    color: page.listening ? Theme.accent : Theme.danger
                 }
                 Text {
-                    text: "Ready to receive"
+                    text: page.listening ? "Ready to receive" : "Not receiving: the port is already in use"
                     font.pixelSize: Theme.fontBody
                     font.weight: Font.Medium
                     color: Theme.text
@@ -89,7 +54,8 @@ Item {
                     Layout.fillWidth: true
                     horizontalAlignment: Text.AlignRight
                     elide: Text.ElideRight
-                    text: page.deviceName + " · " + page.address
+                    visible: page.listening
+                    text: "Your address: " + page.address
                     font.pixelSize: Theme.fontSmall
                     color: Theme.textMuted
                 }
@@ -146,13 +112,6 @@ Item {
                 font.weight: Font.Bold
                 color: Theme.text
             }
-            AppButton { // DEV ONLY
-                text: "Simulate incoming file"
-                kind: "outline"
-                implicitHeight: 32
-                font.pixelSize: Theme.fontSmall
-                onClicked: page.simulateIncoming()
-            }
         }
 
         Item {
@@ -164,7 +123,7 @@ Item {
                 anchors.fill: parent
                 clip: true
                 spacing: Theme.space2
-                model: transfers
+                model: page.transfers
                 boundsBehavior: Flickable.StopAtBounds
                 ScrollBar.vertical: ScrollBar { }
                 delegate: TransferRow {

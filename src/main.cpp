@@ -1,13 +1,14 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include "corebridge.h"
+#include "transfermodel.h"
 #include <QtQml>
 #include <QFontDatabase>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    // Exposing the class CoreBridge to QML
+    // Exposing the class CoreBridge to QML (its enum Direction is used by Main.qml)
     qmlRegisterType<CoreBridge>("OneNode", 1, 0, "CoreBridge");
 
     const QStringList weights { "Regular", "Medium", "SemiBold", "Bold"};
@@ -19,7 +20,20 @@ int main(int argc, char *argv[])
 
     QGuiApplication :: setFont(QFont("Inter"));
 
+    // The two C++ objects the screens need. They are created HERE (not in QML) because TransferModel needs the
+    // core as an argument, and they live in main(), so they outlive the window.
+    CoreBridge core;
+    TransferModel transfers(&core);
+
     QQmlApplicationEngine engine;
+
+    // Hand them to Main.qml: they arrive as its "required property core" and "required property transfers".
+    // This must happen BEFORE loadFromModule.
+    engine.setInitialProperties({
+        { "core", QVariant :: fromValue(&core) },
+        { "transfers", QVariant :: fromValue(&transfers) }
+    });
+
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

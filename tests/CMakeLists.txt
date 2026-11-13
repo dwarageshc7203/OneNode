@@ -11,3 +11,7 @@ add_test(NAME test_session COMMAND test_session) # launch this as a separate pro
 qt_add_executable(test_corebridge test_corebridge.cpp)
 target_link_libraries(test_corebridge PRIVATE Qt6::Test onenode_core)
 add_test(NAME test_corebridge COMMAND test_corebridge)
+
+qt_add_executable(test_transfermodel test_transfermodel.cpp)
+target_link_libraries(test_transfermodel PRIVATE Qt6::Test onenode_core)
+add_test(NAME test_transfermodel COMMAND test_transfermodel)
