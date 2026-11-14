@@ -118,15 +118,25 @@ ApplicationWindow {
             transfers: window.transfers
             listening: window.listening
             address: window.address
-            onSendRequested: window.page = 1
-            onNotify: (message) => toast.show(message)
+            onSendRequested: {
+                window.page = 1
+                sendPage.chooseFiles()
+            }
+            onFilesDropped: (urls) => {
+                sendPage.files = urls // the files wait on the Send page until you type where to send them
+                sendPage.errorText = ""
+                window.page = 1
+            }
         }
         SendPage {
+            id: sendPage
             objectName: "sendPage"
+            core: window.core
             onDone: window.page = 0
             onNotify: (message) => toast.show(message)
         }
         SettingsPage {
+            core: window.core
             onNotify: (message) => toast.show(message)
         }
     }

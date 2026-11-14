@@ -30,6 +30,7 @@ private:
     QFile *file = nullptr; // will point at the open file to be shared
     qint64 totalSize = 0; // size of the file to be shared in bytes
     qint64 sentSize = 0; // bytes sent from the sender session to the receiver
+    static constexpr int connectTimeoutMs = 10000; // give up after 10 s if nobody answers
     static constexpr qint64 chunkSize = 64 * 1024; // 64 KiB per chunk - slice of data accessed in a particular iteration
     static constexpr qint64 maxQueuedBytes = 256 * 1024; // sets the upper limit on how much unwritten memory is allowed to sit in memory waiting for receiver
     QByteArray receivedBuffer; // to process the sending bytes

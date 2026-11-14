@@ -6,14 +6,14 @@ import QtQuick.Layouts
 // and the list of transfers. Files that arrive from other devices show up here as new rows plus a toast,
 // so no extra "receiver" screen is needed after the first connection.
 //
-// The transfer list is real: it comes from TransferModel (see main.cpp). The drop zone and "Choose files" still lead
-// to the pretend Send page: they become real in the next step.
+// The transfer list comes from TransferModel (see main.cpp). Sending itself happens on the Send page:
+// "Choose files" opens the file dialog there, and files dropped here are carried over to it.
 Item {
     id: page
 
     // the page does not know about other pages: it only announces what the user wants, and Main.qml reacts
-    signal sendRequested()
-    signal notify(string message)
+    signal sendRequested()           // "Choose files" was pressed
+    signal filesDropped(var urls)    // files were dropped on the drop zone; urls is the list of them
 
     // given by Main.qml
     required property var transfers // the list of transfers (a TransferModel)
@@ -76,8 +76,11 @@ Item {
                 anchors.fill: parent
                 onDropped: (drop) => {
                     if (drop.hasUrls) {
-                        page.notify(drop.urls.length + " file(s) dropped")
-                        page.sendRequested() // go to the Send page to choose the device
+                        const list = []
+                        for (let i = 0; i < drop.urls.length; ++i) {
+                            list.push(drop.urls[i]) // copy into a plain list that can be passed on
+                        }
+                        page.filesDropped(list)
                     }
                 }
             }

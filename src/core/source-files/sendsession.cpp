@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QFileInfo>
 #include <QJsonObject>
+#include <QTimer>
 
 // SendSession constructor
 SendSession :: SendSession (const QString &host, quint16 port, const QString &filePath, QObject *parent) : QObject(parent), socket(new QTcpSocket(this)), filePath(filePath), fileName(QFileInfo(filePath).fileName())
@@ -16,6 +17,17 @@ SendSession :: SendSession (const QString &host, quint16 port, const QString &fi
 
     qDebug() << "Sender session: connecting to: " << host << port;
     socket -> connectToHost(host, port);
+
+    // A wrong address often gets no answer at all (no "refused"), and the system would wait for minutes.
+    // So: if we are still not connected after 10 s, report it and give up.
+    // The timer belongs to this session (context "this"), so it disappears if the session is deleted earlier.
+    QTimer :: singleShot(connectTimeoutMs, this, [this] {
+        if (socket -> state() != QAbstractSocket :: ConnectedState && !reported) {
+            fail("No answer from the other device. Check the address, and that OneNode is open there.");
+            socket -> abort();
+            deleteLater();
+        }
+    });
 }
 
 // destructor

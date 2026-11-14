@@ -1,13 +1,32 @@
 import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
+import QtQuick.Dialogs
 
-// Screen 3: Settings. For now the values are pretend and are not saved anywhere;
-// saving them (QSettings) comes later.
+// Screen 3: Settings. Only what really works is here: the folder where received files are saved.
+// More settings come back when the logic behind them exists (device name with discovery, trusted devices with pairing).
 Item {
     id: page
 
+    required property var core            // the CoreBridge, given by Main.qml
+    property string folder: core.receiveFolder() // the folder shown on screen
+    property string errorText: ""
+
     signal notify(string message)
+
+    FolderDialog {
+        id: folderDialog
+        title: "Choose where received files are saved"
+        currentFolder: page.core.receiveFolderUrl() // the dialog opens in the current folder
+        onAccepted: {
+            const problem = page.core.changeReceiveFolder(selectedFolder) // "" means it worked
+            page.errorText = problem
+            page.folder = page.core.receiveFolder()
+            if (problem === "") {
+                page.notify("Received files will now be saved to " + page.folder)
+            }
+        }
+    }
 
     Flickable {
         id: scroller
@@ -32,41 +51,6 @@ Item {
                 color: Theme.text
             }
 
-            // ---- this device ----
-            Card {
-                Layout.fillWidth: true
-
-                Text {
-                    text: "This device"
-                    font.pixelSize: Theme.fontBody
-                    font.weight: Font.Bold
-                    color: Theme.text
-                }
-                Text {
-                    text: "The name other devices see when you connect"
-                    font.pixelSize: Theme.fontSmall
-                    color: Theme.textMuted
-                }
-                TextField {
-                    id: nameField
-                    Layout.fillWidth: true
-                    implicitHeight: 40
-                    text: "Victus"
-                    font.pixelSize: Theme.fontBody
-                    color: Theme.text
-                    selectionColor: Theme.accent
-                    selectedTextColor: Theme.textOnAccent
-                    leftPadding: Theme.space3
-                    rightPadding: Theme.space3
-                    background: Rectangle {
-                        radius: Theme.radiusSmall
-                        color: Theme.card
-                        border.width: nameField.activeFocus ? 2 : 1
-                        border.color: nameField.activeFocus ? Theme.accent : Theme.border
-                    }
-                }
-            }
-
             // ---- receiving ----
             Card {
                 Layout.fillWidth: true
@@ -89,25 +73,23 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         elide: Text.ElideMiddle
-                        text: "~/Downloads/OneNode"
+                        text: page.folder
                         font.pixelSize: Theme.fontBody
                         color: Theme.text
                     }
                     AppButton {
                         text: "Change…"
                         kind: "outline"
-                        onClicked: page.notify("The folder picker comes in a later step")
+                        onClicked: folderDialog.open()
                     }
                 }
-                AppSwitch {
+                Text {
                     Layout.fillWidth: true
-                    text: "Show a notification when a file arrives"
-                    checked: true
-                }
-                AppSwitch {
-                    Layout.fillWidth: true
-                    text: "Ask before accepting a device for the first time"
-                    checked: true
+                    visible: page.errorText !== ""
+                    wrapMode: Text.Wrap
+                    text: page.errorText
+                    font.pixelSize: Theme.fontSmall
+                    color: Theme.danger
                 }
             }
 

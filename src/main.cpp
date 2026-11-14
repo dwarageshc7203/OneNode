@@ -4,6 +4,8 @@
 #include "transfermodel.h"
 #include <QtQml>
 #include <QFontDatabase>
+#include <QDir>
+#include <QSettings>
 
 int main(int argc, char *argv[])
 {
@@ -23,6 +25,13 @@ int main(int argc, char *argv[])
     // The two C++ objects the screens need. They are created HERE (not in QML) because TransferModel needs the
     // core as an argument, and they live in main(), so they outlive the window.
     CoreBridge core;
+
+    // use the receive folder the user chose last time (see CoreBridge::changeReceiveFolder), if it still exists
+    const QString savedFolder = QSettings("OneNode", "OneNode").value("receiveDir").toString();
+    if (!savedFolder.isEmpty() && QDir(savedFolder).exists()) {
+        core.setReceiveDir(savedFolder);
+    }
+
     TransferModel transfers(&core);
 
     QQmlApplicationEngine engine;

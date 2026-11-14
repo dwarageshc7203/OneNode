@@ -2,6 +2,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTemporaryDir>
+#include <QSettings>
 
 #include "corebridge.h"
 
@@ -78,6 +79,7 @@ class TestCoreBridge : public QObject
 
 private:
     QTemporaryDir tempDir; // a throwaway folder: tests never touch the real Downloads
+    QTemporaryDir settingsDir; // where the remembered settings go during the tests, not in the real ~/.config
 
     QString makeFile(const QString &name, int size)
     {
@@ -97,6 +99,113 @@ private:
     }
 
 private slots:
+
+    void initTestCase()
+    {
+        QSettings :: setPath(QSettings :: NativeFormat, QSettings :: UserScope, settingsDir.path());
+    }
+
+    // ---- the receive folder ----
+    void changeReceiveFolderSwitchesAndRemembers()
+    {
+        CoreBridge bridge;
+        const QString folder = tempDir.path() + "/newhome";
+        QDir().mkpath(folder);
+
+        QVERIFY(bridge.changeReceiveFolder(QUrl :: fromLocalFile(folder)).isEmpty());
+        QCOMPARE(bridge.receiveFolder(), folder);
+        QCOMPARE(bridge.receiveFolderUrl(), QUrl :: fromLocalFile(folder));
+        QCOMPARE(QSettings("OneNode", "OneNode").value("receiveDir").toString(), folder); // remembered for the next start
+    }
+
+    void changeReceiveFolderRefusesBadFolders()
+    {
+        CoreBridge bridge;
+        const QString before = bridge.receiveFolder();
+
+        QVERIFY(!bridge.changeReceiveFolder(QUrl()).isEmpty());                                          // nothing chosen
+        QVERIFY(!bridge.changeReceiveFolder(QUrl :: fromLocalFile(tempDir.path() + "/nope")).isEmpty()); // does not exist
+        QVERIFY(!bridge.changeReceiveFolder(QUrl("https://example.com/x")).isEmpty());                   // not a local folder
+
+        QCOMPARE(bridge.receiveFolder(), before); // nothing changed
+    }
+
+    // ---- the address box ----
+    void parseAddress_data()
+    {
+        QTest :: addColumn<QString>("text");
+        QTest :: addColumn<QString>("host");
+        QTest :: addColumn<int>("port");
+        QTest :: addColumn<bool>("ok");
+
+        QTest :: newRow("ip only")          << "192.168.1.23"       << "192.168.1.23" << 45454 << true;
+        QTest :: newRow("ip and port")      << "192.168.1.23:9000"  << "192.168.1.23" << 9000  << true;
+        QTest :: newRow("spaces around")    << "  10.0.0.5:1234  "  << "10.0.0.5"     << 1234  << true;
+        QTest :: newRow("a name")           << "my-pc.local"        << "my-pc.local"  << 45454 << true;
+        QTest :: newRow("empty")            << ""                   << "" << 0 << false;
+        QTest :: newRow("only spaces")      << "   "                << "" << 0 << false;
+        QTest :: newRow("port zero")        << "10.0.0.5:0"         << "" << 0 << false;
+        QTest :: newRow("port too big")     << "10.0.0.5:65536"     << "" << 0 << false;
+        QTest :: newRow("port not a number")<< "10.0.0.5:abc"       << "" << 0 << false;
+        QTest :: newRow("empty port")       << "10.0.0.5:"          << "" << 0 << false;
+        QTest :: newRow("no host")          << ":9000"              << "" << 0 << false;
+        QTest :: newRow("inner space")      << "10.0.0 .5"          << "" << 0 << false;
+        QTest :: newRow("ipv6")             << "fe80::1"            << "" << 0 << false;
+        QTest :: newRow("slash")            << "10.0.0.5/evil"      << "" << 0 << false;
+    }
+
+    void parseAddress()
+    {
+        QFETCH(QString, text);
+        QFETCH(QString, host);
+        QFETCH(int, port);
+        QFETCH(bool, ok);
+
+        QString gotHost;
+        quint16 gotPort = 0;
+        const QString problem = CoreBridge :: parseAddress(text, gotHost, gotPort);
+
+        QCOMPARE(problem.isEmpty(), ok);
+        if (ok) {
+            QCOMPARE(gotHost, host);
+            QCOMPARE(int(gotPort), port);
+        } else {
+            QVERIFY(gotHost.isEmpty()); // nothing is filled in on failure
+        }
+    }
+
+    // ---- sendTo: several files from urls, with checks before anything starts ----
+    void sendToStartsOneTransferPerFile()
+    {
+        CoreBridge receiver;
+        receiver.setReceiveDir(tempDir.path() + "/inbox");
+        QVERIFY(receiver.startListening(0));
+        auto *receiverEvents = new Recorder(&receiver);
+
+        CoreBridge sender;
+        const QString address = "127.0.0.1:" + QString :: number(receiver.listeningPort());
+        const QString problem = sender.sendTo(address, { QUrl :: fromLocalFile(makeFile("one.bin", 1000)),
+                                                        QUrl :: fromLocalFile(makeFile("two.bin", 2000)) });
+        QVERIFY2(problem.isEmpty(), qPrintable(problem));
+
+        QTRY_COMPARE_WITH_TIMEOUT(receiverEvents -> count("finished"), 2, 5000);
+        QVERIFY(QFile :: exists(tempDir.path() + "/inbox/one.bin"));
+        QVERIFY(QFile :: exists(tempDir.path() + "/inbox/two.bin"));
+    }
+
+    void sendToStartsNothingWhenSomethingIsWrong()
+    {
+        CoreBridge sender;
+        QSignalSpy started(&sender, &CoreBridge :: transferStarted);
+        const QUrl good = QUrl :: fromLocalFile(makeFile("ok.bin", 10));
+
+        QVERIFY(!sender.sendTo("", { good }).isEmpty());                         // no address
+        QVERIFY(!sender.sendTo("10.0.0.5", {}).isEmpty());                       // no files
+        QVERIFY(!sender.sendTo("10.0.0.5", { good, QUrl("https://x.y/a") }).isEmpty()); // one file is not local
+
+        QCOMPARE(started.count(), 0); // the good file was NOT started either: all or nothing
+    }
+
     // the started signal tells the screen WHO the other device is
     void startedCarriesThePeerAddress()
     {

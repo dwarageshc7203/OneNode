@@ -7,6 +7,8 @@
 #include <QTcpServer>
 #include <QString>
 #include <QSet>
+#include <QList>
+#include <QUrl>
 
 class CoreBridge : public QObject {
 
@@ -20,11 +22,26 @@ public:
     Q_INVOKABLE bool startListening(quint16 port = Protocol :: defaultPort); // app startup function
     Q_INVOKABLE void stopListening(); // app quit function
     Q_INVOKABLE void sendFile(const QString &host, const QString &filePath, quint16 port = Protocol :: defaultPort); // core file transfer logic starts here
-    QString receiveFolder() const;  // the folder where the receiver gets his files
+
+    Q_INVOKABLE QString receiveFolder() const;  // the folder where the receiver gets his files
+    Q_INVOKABLE QUrl receiveFolderUrl() const;  // the same folder as a url, for the folder dialog
+
     Q_INVOKABLE quint64 listeningPort() const; // the actual listening port (0 when not listening)
     Q_INVOKABLE QString localAddress() const; // this machine's address on the local network, for the other device to type in
 
     void setReceiveDir(const QString &dir); // to set the destination directory
+
+    // Turns what the user typed ("192.168.1.23" or "192.168.1.23:45454") into a host and a port.
+    // Returns an empty string when it is fine, otherwise a message that can be shown to the user as it is.
+    static QString parseAddress(const QString &text, QString &host, quint16 &port);
+
+    // What the Settings page calls after the user picked a folder: checks it, uses it from now on,
+    // and remembers it for the next start. Returns "" on success, or a message for the user (nothing changed then).
+    Q_INVOKABLE QString changeReceiveFolder(const QUrl &folder);
+
+    // What the Send page calls: one address, one or more files (as urls from the file dialog or a drop).
+    // Starts one sendFile for every file. Returns "" on success, or a message for the user (nothing was started then).
+    Q_INVOKABLE QString sendTo(const QString &address, const QList<QUrl> &files);
 
 
 
