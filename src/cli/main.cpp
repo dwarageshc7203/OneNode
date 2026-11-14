@@ -45,6 +45,13 @@ int main(int argc, char *argv[])
 
     CoreBridge bridge;
 
+    // every device needs its identity (certificate + key) before it can talk TLS; created on the first start
+    const QString identityError = bridge.loadIdentity(CoreBridge :: defaultDataFolder());
+    if (!identityError.isEmpty()) {
+        err << identityError << "\n";
+        return 1;
+    }
+
     QObject :: connect(&bridge, &CoreBridge :: transferStarted, [&out] (quint64 id, const QString &name, CoreBridge :: Direction direction, qint64 total) {
         out << (direction == CoreBridge :: Direction :: Send ? "Sending" : "Receiving") << " #" << id << ": " << name << " (" << total << " bytes)\n" << Qt :: flush;
     });

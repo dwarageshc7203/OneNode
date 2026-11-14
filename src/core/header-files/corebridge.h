@@ -4,7 +4,8 @@
 #include "protocol.h"
 
 #include <QObject>
-#include <QTcpServer>
+#include <QSslConfiguration>
+#include <QSslServer>
 #include <QString>
 #include <QSet>
 #include <QList>
@@ -22,14 +23,20 @@ public:
     Q_INVOKABLE bool startListening(quint16 port = Protocol :: defaultPort); // app startup function
     Q_INVOKABLE void stopListening(); // app quit function
     Q_INVOKABLE void sendFile(const QString &host, const QString &filePath, quint16 port = Protocol :: defaultPort); // core file transfer logic starts here
-
     Q_INVOKABLE QString receiveFolder() const;  // the folder where the receiver gets his files
     Q_INVOKABLE QUrl receiveFolderUrl() const;  // the same folder as a url, for the folder dialog
-
     Q_INVOKABLE quint64 listeningPort() const; // the actual listening port (0 when not listening)
     Q_INVOKABLE QString localAddress() const; // this machine's address on the local network, for the other device to type in
 
     void setReceiveDir(const QString &dir); // to set the destination directory
+
+    // The device's identity (its certificate + key, see identity.h). Must be loaded once at startup,
+    // before startListening / sendFile. Returns "" on success, otherwise a message for the user.
+    QString loadIdentity(const QString &folder);
+    // Where the identity (and later the trusted devices) live. The environment variable ONENODE_DATA_DIR
+    // overrides it, so that two copies of OneNode on one computer can be two different devices.
+    static QString defaultDataFolder();
+    Q_INVOKABLE QString myFingerprint() const; // this device's fingerprint (empty before loadIdentity)
 
     // Turns what the user typed ("192.168.1.23" or "192.168.1.23:45454") into a host and a port.
     // Returns an empty string when it is fine, otherwise a message that can be shown to the user as it is.
@@ -54,7 +61,10 @@ signals:
 private:
 
     // Objects and variables
-    QTcpServer *server; // for the receiver side
+    QSslServer *server; // for the receiver side (every connection is TLS)
+    QSslConfiguration tls; // our certificate, key and TLS rules
+    bool haveIdentity = false; // true after loadIdentity succeeded
+    QString fingerprint; // our own fingerprint
     QString receiveDir; // the save directory on the receiver end
     quint64 nextId = 1; // id of the next process
     QSet <quint64> announced; // IDs whose transferStarted has been emitted

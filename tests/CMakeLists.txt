@@ -15,3 +15,15 @@ add_test(NAME test_corebridge COMMAND test_corebridge)
 qt_add_executable(test_transfermodel test_transfermodel.cpp)
 target_link_libraries(test_transfermodel PRIVATE Qt6::Test onenode_core)
 add_test(NAME test_transfermodel COMMAND test_transfermodel)
+
+qt_add_executable(test_identity test_identity.cpp)
+target_link_libraries(test_identity PRIVATE Qt6::Test onenode_core)
+add_test(NAME test_identity COMMAND test_identity)
+
+qt_add_executable(test_tls test_tls.cpp)
+target_link_libraries(test_tls PRIVATE Qt6::Test onenode_core)
+add_test(NAME test_tls COMMAND test_tls)
+
+qt_add_executable(test_truststore test_truststore.cpp)
+target_link_libraries(test_truststore PRIVATE Qt6::Test onenode_core)
+add_test(NAME test_truststore COMMAND test_truststore)

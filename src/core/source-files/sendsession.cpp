@@ -1,5 +1,6 @@
 #include "sendsession.h"
 #include "protocol.h"
+#include "tlsconfig.h"
 
 #include <QDebug>
 #include <QFileInfo>
@@ -7,22 +8,27 @@
 #include <QTimer>
 
 // SendSession constructor
-SendSession :: SendSession (const QString &host, quint16 port, const QString &filePath, QObject *parent) : QObject(parent), socket(new QTcpSocket(this)), filePath(filePath), fileName(QFileInfo(filePath).fileName())
+SendSession :: SendSession (const QString &host, quint16 port, const QString &filePath, const QSslConfiguration &tls, QObject *parent) : QObject(parent), socket(new QSslSocket(this)), filePath(filePath), fileName(QFileInfo(filePath).fileName())
 {
-    connect(socket, &QTcpSocket :: connected, this, &SendSession :: onConnected);
+    socket -> setSslConfiguration(tls); // our ID card + TLS 1.3 only
+
+    // "encrypted" (not "connected") is the moment we may start talking: the TLS handshake is finished
+    connect(socket, &QSslSocket :: encrypted, this, &SendSession :: onConnected);
+    // the other device's card is self-signed, so TLS complains; we forgive only that (see tlsconfig.h)
+    connect(socket, &QSslSocket :: sslErrors, this, [this] (const QList<QSslError> &errors) { TlsConfig :: acceptSelfSigned(socket, errors); });
     connect(socket, &QTcpSocket :: disconnected, this, &SendSession :: onDisconnected);
     connect(socket, &QTcpSocket :: errorOccurred, this, &SendSession :: onSocketError);
     connect(socket, &QTcpSocket :: bytesWritten, this, &SendSession :: sendMore);
     connect(socket, &QTcpSocket :: readyRead, this, &SendSession :: onReadyRead);
 
     qDebug() << "Sender session: connecting to: " << host << port;
-    socket -> connectToHost(host, port);
+    socket -> connectToHostEncrypted(host, port); // connect, then do the TLS handshake
 
     // A wrong address often gets no answer at all (no "refused"), and the system would wait for minutes.
-    // So: if we are still not connected after 10 s, report it and give up.
+    // So: if the secure connection is still not ready after 10 s (connecting + handshake), report it and give up.
     // The timer belongs to this session (context "this"), so it disappears if the session is deleted earlier.
     QTimer :: singleShot(connectTimeoutMs, this, [this] {
-        if (socket -> state() != QAbstractSocket :: ConnectedState && !reported) {
+        if (!socket -> isEncrypted() && !reported) {
             fail("No answer from the other device. Check the address, and that OneNode is open there.");
             socket -> abort();
             deleteLater();
@@ -83,6 +89,8 @@ void SendSession :: onSocketError(QAbstractSocket :: SocketError)
 
     if (socket -> state() == QAbstractSocket :: UnconnectedState) {
         deleteLater();
+    } else {
+        socket -> abort(); // a failed handshake leaves the socket half open: close it (that also ends this session)
     }
 }
 

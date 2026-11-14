@@ -1,5 +1,8 @@
 #include <QtTest>
 #include <QTcpServer>
+#include <QSslServer>
+#include "identity.h"
+#include "tlsconfig.h"
 #include <QTcpSocket>
 #include <QTemporaryDir>
 #include <QCryptographicHash>
@@ -113,9 +116,26 @@ private slots:
         sourceFile.write(data);
         sourceFile.close();
 
+        // This test goes over real TLS: two devices, each with its own identity.
+        // (The other tests speak raw bytes to ReceiveSession on purpose; the frame rules do not depend on TLS.)
+        QTemporaryDir receiverIdentityDir, senderIdentityDir;
+        QSslCertificate receiverCert, senderCert;
+        QSslKey receiverKey, senderKey;
+        QString identityError;
+        QVERIFY2(Identity :: loadOrCreate(receiverIdentityDir.path(), receiverCert, receiverKey, identityError), qPrintable(identityError));
+        QVERIFY2(Identity :: loadOrCreate(senderIdentityDir.path(), senderCert, senderKey, identityError), qPrintable(identityError));
+
+        QSslServer tlsServer;
+        tlsServer.setSslConfiguration(TlsConfig :: make(receiverCert, receiverKey));
+        connect(&tlsServer, &QSslServer :: sslErrors, &tlsServer, &TlsConfig :: acceptSelfSigned);
+        connect(&tlsServer, &QTcpServer :: pendingConnectionAvailable, this, [&] {
+            new ReceiveSession(tlsServer.nextPendingConnection(), destination, &tlsServer);
+        });
+        QVERIFY(tlsServer.listen(QHostAddress :: LocalHost, 0));
+
         QStringList finished;
         QStringList senderFailed;
-        auto *sender = new SendSession("127.0.0.1", server.serverPort(), source, this);
+        auto *sender = new SendSession("127.0.0.1", tlsServer.serverPort(), source, TlsConfig :: make(senderCert, senderKey), this);
         connect(sender, &SendSession :: finished, this, [&] (const QString &name) { finished << name; });
         connect(sender, &SendSession :: failed, this, [&] (const QString &, const QString &reason) { senderFailed << reason; });
 

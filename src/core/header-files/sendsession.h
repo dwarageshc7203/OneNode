@@ -4,7 +4,8 @@
 #include "progressthrottle.h"
 
 #include <QObject>
-#include <QTcpSocket>
+#include <QSslConfiguration>
+#include <QSslSocket>
 #include <QString>
 #include <QFile>
 #include <QCryptographicHash>
@@ -14,7 +15,7 @@ class SendSession : public QObject
     Q_OBJECT
 
 public:
-    explicit SendSession (const QString &host, quint16 port, const QString &filePath, QObject *parent = nullptr);
+    explicit SendSession (const QString &host, quint16 port, const QString &filePath, const QSslConfiguration &tls, QObject *parent = nullptr); // tls = our certificate, key and TLS rules (see tlsconfig.h)
     ~SendSession() override; // destructor
 
 signals:
@@ -24,7 +25,7 @@ signals:
 
 private:
 
-    QTcpSocket *socket; // sender connection
+    QSslSocket *socket; // sender connection, encrypted with TLS
     QString filePath; // the file we are sending
     QString fileName;
     QFile *file = nullptr; // will point at the open file to be shared

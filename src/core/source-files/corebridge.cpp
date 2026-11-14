@@ -2,9 +2,11 @@
 #include "receivesession.h"
 #include "sendsession.h"
 #include "netutil.h"
+#include "identity.h"
+#include "tlsconfig.h"
 
 #include <QDebug>
-#include <QTcpServer>
+#include <QSslServer>
 #include <QString>
 #include <QTcpSocket>
 #include <QDir>
@@ -15,10 +17,45 @@
 #include <QSettings>
 
 // Constructor - member initializer list
-CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QTcpServer (this)), receiveDir (QStandardPaths :: writableLocation(QStandardPaths :: DownloadLocation) + "/OneNode")
+CoreBridge :: CoreBridge (QObject *parent) : QObject (parent), server (new QSslServer (this)), receiveDir (QStandardPaths :: writableLocation(QStandardPaths :: DownloadLocation) + "/OneNode")
 {
     // connect server's signal to handler method
-    connect(server, &QTcpServer :: newConnection, this, &CoreBridge :: handleNewConnection);    
+    // pendingConnectionAvailable (not newConnection): it comes only AFTER the TLS handshake succeeded,
+    // so handleNewConnection never sees a stranger who could not complete it
+    connect(server, &QTcpServer :: pendingConnectionAvailable, this, &CoreBridge :: handleNewConnection);
+    // incoming cards are self-signed: forgive only that (see tlsconfig.h)
+    connect(server, &QSslServer :: sslErrors, this, &TlsConfig :: acceptSelfSigned);
+    server -> setHandshakeTimeout(10000); // PROTOCOL.md section 7: 10 s for the handshake
+}
+
+QString CoreBridge :: defaultDataFolder()
+{
+    const QString fromEnvironment = qEnvironmentVariable("ONENODE_DATA_DIR");
+    if (!fromEnvironment.isEmpty()) {
+        return fromEnvironment;
+    }
+    return QStandardPaths :: writableLocation(QStandardPaths :: GenericDataLocation) + "/OneNode"; // Linux: ~/.local/share/OneNode
+}
+
+QString CoreBridge :: loadIdentity(const QString &folder)
+{
+    QSslCertificate cert;
+    QSslKey key;
+    QString error;
+    if (!Identity :: loadOrCreate(folder, cert, key, error)) {
+        return error;
+    }
+
+    tls = TlsConfig :: make(cert, key);
+    server -> setSslConfiguration(tls);
+    fingerprint = Identity :: fingerprint(cert);
+    haveIdentity = true;
+    return QString();
+}
+
+QString CoreBridge :: myFingerprint() const
+{
+    return fingerprint;
 }
 
 void CoreBridge :: setReceiveDir(const QString &dir)
@@ -154,6 +191,10 @@ QString CoreBridge :: localAddress() const
 // app startup function
 bool CoreBridge :: startListening(quint16 port)
 {
+    if (!haveIdentity) { // never listen without an identity: there would be nothing to show in the TLS handshake
+        return false;
+    }
+
     if (!server -> listen(QHostAddress :: Any, port)) { // if the port is busy or held by other tasks
         return false;
     }
@@ -180,12 +221,18 @@ void CoreBridge :: stopListening()
 void CoreBridge :: sendFile(const QString &host, const QString &filePath, quint16 port)
 {
     const quint64 id = nextId ++;
-    auto *sendSession = new SendSession(host, port, filePath, this); // calls out SenderSession
-
-    // connecting signal of SendSession with that of CoreBridge
-
     const QFileInfo info (filePath);
     announce (id, info.fileName(), Direction :: Send, info.size(), host);
+
+    if (!haveIdentity) {
+        emit transferFailed(id, info.fileName(), "This device has no identity yet, so it cannot make a secure connection.");
+        announced.remove(id);
+        return;
+    }
+
+    auto *sendSession = new SendSession(host, port, filePath, tls, this); // calls out SenderSession
+
+    // connecting signal of SendSession with that of CoreBridge
 
     connect(sendSession, &SendSession :: progress, this, [this, id] (const QString &fileName, qint64 done, qint64 total)
     {

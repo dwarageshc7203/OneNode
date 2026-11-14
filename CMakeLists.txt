@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Network)
+find_package(OpenSSL 3.0 REQUIRED)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -26,11 +27,17 @@ add_library(onenode_core STATIC
     src/core/header-files/sendsession.h
     src/core/header-files/transfermodel.h
     src/core/source-files/transfermodel.cpp
+    src/core/header-files/identity.h
+    src/core/source-files/identity.cpp
+    src/core/header-files/tlsconfig.h
+    src/core/source-files/tlsconfig.cpp
+    src/core/source-files/truststore.cpp
+    src/core/header-files/truststore.h
 )
 
 # PUBLIC - anyone can access
 target_include_directories(onenode_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/core/header-files)
-target_link_libraries(onenode_core PUBLIC Qt6::Network)
+target_link_libraries(onenode_core PUBLIC Qt6::Network OpenSSL::Crypto)
 
 # PRIVATE - only I can use it
 # contains the CLI's source file with the core

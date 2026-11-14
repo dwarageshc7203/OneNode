@@ -1,8 +1,10 @@
 #include <QtTest>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QSslSocket>
+#include "identity.h"
+#include "tlsconfig.h"
 #include <QTemporaryDir>
-#include <QSettings>
 
 #include "corebridge.h"
 
@@ -80,6 +82,16 @@ class TestCoreBridge : public QObject
 private:
     QTemporaryDir tempDir; // a throwaway folder: tests never touch the real Downloads
     QTemporaryDir settingsDir; // where the remembered settings go during the tests, not in the real ~/.config
+    QList<QSharedPointer<QTemporaryDir>> identityDirs; // one throwaway identity folder per bridge that needs one
+
+    // Gives a bridge its own device identity (certificate + key), like main.cpp does at startup
+    void giveIdentity(CoreBridge &bridge)
+    {
+        auto dir = QSharedPointer<QTemporaryDir>::create();
+        identityDirs.append(dir);
+        const QString error = bridge.loadIdentity(dir -> path());
+        QVERIFY2(error.isEmpty(), qPrintable(error));
+    }
 
     QString makeFile(const QString &name, int size)
     {
@@ -99,7 +111,6 @@ private:
     }
 
 private slots:
-
     void initTestCase()
     {
         QSettings :: setPath(QSettings :: NativeFormat, QSettings :: UserScope, settingsDir.path());
@@ -123,9 +134,9 @@ private slots:
         CoreBridge bridge;
         const QString before = bridge.receiveFolder();
 
-        QVERIFY(!bridge.changeReceiveFolder(QUrl()).isEmpty());                                          // nothing chosen
+        QVERIFY(!bridge.changeReceiveFolder(QUrl()).isEmpty());                                        // nothing chosen
         QVERIFY(!bridge.changeReceiveFolder(QUrl :: fromLocalFile(tempDir.path() + "/nope")).isEmpty()); // does not exist
-        QVERIFY(!bridge.changeReceiveFolder(QUrl("https://example.com/x")).isEmpty());                   // not a local folder
+        QVERIFY(!bridge.changeReceiveFolder(QUrl("https://example.com/x")).isEmpty());                 // not a local folder
 
         QCOMPARE(bridge.receiveFolder(), before); // nothing changed
     }
@@ -178,14 +189,16 @@ private slots:
     void sendToStartsOneTransferPerFile()
     {
         CoreBridge receiver;
+        giveIdentity(receiver);
         receiver.setReceiveDir(tempDir.path() + "/inbox");
         QVERIFY(receiver.startListening(0));
         auto *receiverEvents = new Recorder(&receiver);
 
         CoreBridge sender;
+        giveIdentity(sender);
         const QString address = "127.0.0.1:" + QString :: number(receiver.listeningPort());
         const QString problem = sender.sendTo(address, { QUrl :: fromLocalFile(makeFile("one.bin", 1000)),
-                                                        QUrl :: fromLocalFile(makeFile("two.bin", 2000)) });
+                                                         QUrl :: fromLocalFile(makeFile("two.bin", 2000)) });
         QVERIFY2(problem.isEmpty(), qPrintable(problem));
 
         QTRY_COMPARE_WITH_TIMEOUT(receiverEvents -> count("finished"), 2, 5000);
@@ -196,6 +209,7 @@ private slots:
     void sendToStartsNothingWhenSomethingIsWrong()
     {
         CoreBridge sender;
+        giveIdentity(sender);
         QSignalSpy started(&sender, &CoreBridge :: transferStarted);
         const QUrl good = QUrl :: fromLocalFile(makeFile("ok.bin", 10));
 
@@ -210,11 +224,13 @@ private slots:
     void startedCarriesThePeerAddress()
     {
         CoreBridge receiver;
+        giveIdentity(receiver);
         receiver.setReceiveDir(tempDir.path() + "/inbox");
         QVERIFY(receiver.startListening(0));
         QSignalSpy receiverSpy(&receiver, &CoreBridge :: transferStarted);
 
         CoreBridge sender;
+        giveIdentity(sender);
         QSignalSpy senderSpy(&sender, &CoreBridge :: transferStarted);
         sender.sendFile("127.0.0.1", makeFile("peer.bin", 1000), receiver.listeningPort());
 
@@ -226,11 +242,13 @@ private slots:
     void idsAreUniqueAndStartedComesFirst()
     {
         CoreBridge receiver;
+        giveIdentity(receiver);
         receiver.setReceiveDir(tempDir.path() + "/inbox");
         QVERIFY(receiver.startListening(0)); // port 0: the OS picks a free port
         auto *receiverEvents = new Recorder(&receiver);
 
         CoreBridge sender;
+        giveIdentity(sender);
         auto *senderEvents = new Recorder(&sender);
 
         const quint16 port = receiver.listeningPort();
@@ -284,6 +302,7 @@ private slots:
         } // the probe is gone, so nobody listens on that port any more
 
         CoreBridge sender;
+        giveIdentity(sender);
         auto *events = new Recorder(&sender);
         sender.sendFile("127.0.0.1", makeFile("x.bin", 10), closedPort);
 
@@ -296,16 +315,36 @@ private slots:
         QCOMPARE(list.last().kind, QString("failed"));
     }
 
+    void withoutAnIdentityNothingStartsAndNothingListens()
+    {
+        CoreBridge bridge; // loadIdentity was never called
+        QVERIFY(!bridge.startListening(0));
+        QCOMPARE(bridge.listeningPort(), quint64(0));
+
+        auto *events = new Recorder(&bridge);
+        bridge.sendFile("127.0.0.1", makeFile("noid.bin", 10), 45454);
+        QCOMPARE(events -> count("failed"), 1); // reported at once, nothing was connected
+    }
+
     void badHeaderIsAnnouncedBeforeItFails()
     {
         CoreBridge receiver;
+        giveIdentity(receiver);
         receiver.setReceiveDir(tempDir.path() + "/inbox2");
         QVERIFY(receiver.startListening(0));
         auto *events = new Recorder(&receiver);
 
-        QTcpSocket raw;
-        raw.connectToHost("127.0.0.1", receiver.listeningPort());
-        QVERIFY(raw.waitForConnected(2000));
+        // a hand-made sender: a proper TLS connection with its own identity, but a broken first frame
+        QTemporaryDir rawIdentityDir;
+        QSslCertificate rawCert;
+        QSslKey rawKey;
+        QString identityError;
+        QVERIFY2(Identity :: loadOrCreate(rawIdentityDir.path(), rawCert, rawKey, identityError), qPrintable(identityError));
+        QSslSocket raw;
+        raw.setSslConfiguration(TlsConfig :: make(rawCert, rawKey));
+        connect(&raw, &QSslSocket :: sslErrors, &raw, [&raw] (const QList<QSslError> &e) { TlsConfig :: acceptSelfSigned(&raw, e); });
+        raw.connectToHostEncrypted("127.0.0.1", receiver.listeningPort());
+        QTRY_VERIFY_WITH_TIMEOUT(raw.isEncrypted(), 3000); // (not waitForEncrypted: that would block the receiver in this same thread)
         raw.write(QByteArray(4, '\0')); // a header length of 0 is not allowed (must be 1 to 16384)
         raw.flush();
 
