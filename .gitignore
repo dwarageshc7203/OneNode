@@ -57,3 +57,12 @@ compile_commands.json
 
 Testing/
 android/gradle/gradle-daemon-jvm.properties
+
+build/
+.gradle/
+.idea/
+local.properties
+*.jks
+*.keystore
+*.b64
+.kotlin/
