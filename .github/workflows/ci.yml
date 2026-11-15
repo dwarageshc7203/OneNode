@@ -1,33 +1,140 @@
 name: CI
 
+# Builds OneNode and runs every test on Ubuntu, Windows and macOS, on each push to main and on each pull request.
+
 on:
   push:
-    branches: [main] # CI pipelines in main alone is enough
-  pull_request: # it works normalls for all the PRs
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true        # a newer push replaces the run that is still going
+
+permissions:
+  contents: read                  # CI only reads the code
+
+env:
+  QT_VERSION: "6.8.*"
+  # Some build servers (virtual networks) accept multicast packets but never deliver them back to us.
+  # The one test that needs real multicast then skips itself instead of failing. On your own computer it must pass.
+  ONENODE_MULTICAST_TEST: optional
+  QT_QPA_PLATFORM: offscreen      # no screen on a build server
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
+  build-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false            # if one system breaks, still see the others
+      matrix:
+        include:
+          - { name: Ubuntu,  os: ubuntu-24.04, qt_arch: linux_gcc_64 }
+          - { name: Windows, os: windows-2022, qt_arch: win64_msvc2022_64 }
+          - { name: macOS,   os: macos-14,     qt_arch: "" }
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.*'
-          arch: 'linux_gcc_64'
+          version: ${{ env.QT_VERSION }}
+          arch: ${{ matrix.qt_arch }}
           cache: true
 
-      - name: Install build tools
+      # ---- OpenSSL and build tools, one way per system ----
+      - name: Tools (Ubuntu)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libgl1-mesa-dev libxkbcommon-dev
+          sudo apt-get install -y ninja-build libssl-dev libgl1-mesa-dev libxkbcommon-dev
 
-      - name: Configure
+      - name: Tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install ninja openssl@3
+          OPENSSL_PREFIX="$(brew --prefix openssl@3)"
+          echo "OPENSSL_ROOT_DIR=$OPENSSL_PREFIX" >> "$GITHUB_ENV"
+          # Qt's TLS plugin looks for libssl.3.dylib in these folders; Homebrew's folder is not one of them
+          echo "DYLD_LIBRARY_PATH=$OPENSSL_PREFIX/lib" >> "$GITHUB_ENV"
+
+      - name: Cache OpenSSL build (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\.vcpkg-cache
+          key: vcpkg-openssl-x64-windows-v1
+
+      - name: OpenSSL (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\.vcpkg-cache
+        run: |
+          New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install openssl:x64-windows
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg failed" }
+          $prefix = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          "OPENSSL_ROOT_DIR=$prefix" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "$prefix\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH   # so that the tests find the OpenSSL DLLs
+
+      # ---- build and test ----
+      - name: Configure (Ubuntu, macOS)
+        if: runner.os != 'Windows'
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build
+
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --config Release
 
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build -C Release --output-on-failure --timeout 180
+
+      # ---- the Android code talks to the desktop program (both directions, with a PIN) ----
+      - name: Java (for the Android interop test)
+        if: runner.os == 'Linux'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android core against the desktop program
+        if: runner.os == 'Linux'
+        working-directory: android
+        env:
+          ONENODE_CLI: ${{ github.workspace }}/build/onenode-cli
+        run: ./gradlew --no-daemon :core:test --tests '*InteropTest*' --rerun-tasks
+
+  android:
+    name: Android
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-35 build-tools;35.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # core tests twice: with the JDK's TLS, and with Conscrypt (the TLS library inside Android)
+      - name: Tests, lint and debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon :core:test :core:testConscrypt :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+
+      # an APK you can install on a phone straight from this run (debug-signed, for trying only)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OneNode-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
+          if-no-files-found: error

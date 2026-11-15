@@ -27,10 +27,14 @@ ApplicationWindow {
 
     property bool listening: false // did the core manage to open its port?
     property string address: ""    // "192.168.1.23:45454": what the other device must type in
+    property string discoveryProblem: "" // why other devices cannot find this one by name ("" = they can)
 
     Component.onCompleted: {
         listening = core.startListening()
         address = (core.localAddress() || "no network") + ":" + core.listeningPort()
+        if (listening) {
+            discoveryProblem = core.startDiscovery() // "" when it works
+        }
     }
 
     // The toast ("notification") for files that arrive. Sending shows no toast: you started it yourself.
@@ -56,7 +60,26 @@ ApplicationWindow {
 
         function onTransferFailed(id, name, reason) {
             delete window.receiving[id]
+            pinDialog.forget(id) // a send that failed no longer needs its PIN
             toast.show("Failed: " + name + " (" + reason + ")")
+        }
+
+        // the first time we send to a device, the user types the PIN that device shows
+        function onPinNeeded(id, peerName) {
+            pinDialog.ask(id, peerName)
+        }
+
+        function onDevicePaired(name, fingerprint) {
+            toast.show("Paired with " + name)
+        }
+
+        // receiver side: why "Pair a new device" ended ("paired" is announced by onDevicePaired)
+        function onPairingEnded(reason) {
+            if (reason === "failed") {
+                toast.show("Pairing failed. Press \u201cPair a new device\u201d again to get a new PIN.")
+            } else if (reason === "expired") {
+                toast.show("The PIN ran out. Press \u201cPair a new device\u201d again to get a new one.")
+            }
         }
     }
 
@@ -108,9 +131,34 @@ ApplicationWindow {
         }
     }
 
+    // ---- a problem found at startup (no TLS library, damaged identity ...): shown above everything ----
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 0
+
+        Rectangle {
+            objectName: "startupBanner"
+            Layout.fillWidth: true
+            visible: window.core.startupProblem() !== ""
+            implicitHeight: bannerText.implicitHeight + 2 * Theme.space3
+            color: Theme.dangerSoft
+
+            Text {
+                id: bannerText
+                anchors.fill: parent
+                anchors.margins: Theme.space3
+                wrapMode: Text.Wrap
+                verticalAlignment: Text.AlignVCenter
+                text: window.core.startupProblem()
+                font.pixelSize: Theme.fontBody
+                color: Theme.danger
+            }
+        }
+
     // ---- the three screens ----
     StackLayout {
-        anchors.fill: parent
+        Layout.fillWidth: true
+        Layout.fillHeight: true
         currentIndex: window.page
 
         HomePage {
@@ -118,6 +166,12 @@ ApplicationWindow {
             transfers: window.transfers
             listening: window.listening
             address: window.address
+            discoveryProblem: window.discoveryProblem
+            onPairRequested: {
+                if (!pairDialog.start()) {
+                    toast.show("This device cannot pair right now. See the message at the top of the window.")
+                }
+            }
             onSendRequested: {
                 window.page = 1
                 sendPage.chooseFiles()
@@ -139,6 +193,18 @@ ApplicationWindow {
             core: window.core
             onNotify: (message) => toast.show(message)
         }
+    }
+    } // the column with the banner
+
+    PinDialog {
+        id: pinDialog
+        objectName: "pinDialog"
+        core: window.core
+    }
+    PairDialog {
+        id: pairDialog
+        objectName: "pairDialog"
+        core: window.core
     }
 
     // declared after the screens, so it is drawn on top of them

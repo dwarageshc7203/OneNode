@@ -16,23 +16,31 @@ qt_standard_project_setup(REQUIRES 6.8)
 
 add_library(onenode_core STATIC
     src/core/source-files/corebridge.cpp
+    src/core/source-files/dnsmessage.cpp
+    src/core/source-files/identity.cpp
+    src/core/source-files/mdnsservice.cpp
+    src/core/source-files/pairingengine.cpp
+    src/core/source-files/pairingmode.cpp
+    src/core/source-files/tlsconfig.cpp
+    src/core/source-files/truststore.cpp
     src/core/source-files/protocol.cpp
     src/core/source-files/receivesession.cpp
     src/core/source-files/sendsession.cpp
+    src/core/source-files/transfermodel.cpp
     src/core/header-files/corebridge.h
+    src/core/header-files/dnsmessage.h
+    src/core/header-files/identity.h
+    src/core/header-files/mdnsservice.h
+    src/core/header-files/pairingengine.h
+    src/core/header-files/pairingmode.h
+    src/core/header-files/tlsconfig.h
+    src/core/header-files/truststore.h
     src/core/header-files/netutil.h
     src/core/header-files/progressthrottle.h
     src/core/header-files/protocol.h
     src/core/header-files/receivesession.h
     src/core/header-files/sendsession.h
     src/core/header-files/transfermodel.h
-    src/core/source-files/transfermodel.cpp
-    src/core/header-files/identity.h
-    src/core/source-files/identity.cpp
-    src/core/header-files/tlsconfig.h
-    src/core/source-files/tlsconfig.cpp
-    src/core/source-files/truststore.cpp
-    src/core/header-files/truststore.h
 )
 
 # PUBLIC - anyone can access
@@ -60,6 +68,10 @@ qt_add_qml_module(appOneNode
         qml/HomePage.qml
         qml/SendPage.qml
         qml/SettingsPage.qml
+        qml/PinDialog.qml
+        qml/PairDialog.qml
+        qml/NearbyRow.qml
+        qml/PairedRow.qml
 )
 
 # fonts

@@ -1,47 +1,253 @@
 name: Release
 
+# Builds the four downloads (Linux AppImage, Windows zip, macOS zip, Android APK), checks that each package can really do TLS
+# (the desktop ones) or that its tests pass (Android), and attaches them to a GitHub Release.
+#
+# It starts in two ways:
+#   * by hand (Actions tab -> Release -> Run workflow): a dry run, nothing is published, the files are on the run page
+#   * when YOU push a tag like v0.1.0: the files are attached to a pre-release of that tag
+# Nothing in here creates a tag by itself.
+
 on:
-  workflow_dispatch:          # lets you start it by hand from the Actions tab (a dry run, no tag needed)
+  workflow_dispatch:
   push:
-    tags: ["v*"]              # or runs when you push a tag like v0.1.0-test
+    tags: ["v*"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
-  contents: write             # needed to attach files to a Release
+  contents: read
+
+env:
+  QT_VERSION: "6.8.*"
+  VERSION: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
 
 jobs:
+  linux:
+    name: Linux (AppImage)
+    runs-on: ubuntu-22.04          # the oldest current Ubuntu: the AppImage then runs on 22.04 and newer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: linux_gcc_64
+          cache: true
+
+      - name: Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libssl-dev libgl1-mesa-dev libxkbcommon-dev libxcb-cursor0 xvfb
+
+      - name: Build and test
+        env:
+          ONENODE_MULTICAST_TEST: optional
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          ctest --test-dir build --output-on-failure --timeout 180
+
+      - name: Package
+        run: bash packaging/linux/make-appimage.sh build "$VERSION" dist
+
+      - name: Check the package (TLS must work inside it)
+        run: |
+          chmod +x dist/*.AppImage
+          APPIMAGE_EXTRACT_AND_RUN=1 xvfb-run -a dist/OneNode-${VERSION}-linux-x86_64.AppImage --selftest
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OneNode-linux-x86_64
+          path: dist/*.AppImage
+          if-no-files-found: error
+
   windows:
+    name: Windows (zip)
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
 
       - uses: jurplel/install-qt-action@v4
         with:
-          version: 6.8.*
-          arch: win64_msvc2022_64      # the Qt build that matches Visual Studio 2022
+          version: ${{ env.QT_VERSION }}
+          arch: win64_msvc2022_64
+          cache: true
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\.vcpkg-cache
+          key: vcpkg-openssl-x64-windows-v1
+
+      - name: OpenSSL
+        shell: pwsh
+        env:
+          VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\.vcpkg-cache
+        run: |
+          New-Item -ItemType Directory -Force $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install openssl:x64-windows
+          if ($LASTEXITCODE -ne 0) { throw "vcpkg failed" }
+          $prefix = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          "OPENSSL_ROOT_DIR=$prefix" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "OPENSSL_BIN=$prefix\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "$prefix\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
 
       - name: Build and test
-        run: |
-          cmake -B build
-          cmake --build build --config Release
-          ctest --test-dir build -C Release --output-on-failure
-
-      - name: Collect the app and its Qt libraries
         shell: pwsh
+        env:
+          ONENODE_MULTICAST_TEST: optional
+          QT_QPA_PLATFORM: offscreen
         run: |
-          mkdir dist/OneNode
-          copy build/Release/appOneNode.exe dist/OneNode/
-          copy build/Release/onenode-cli.exe dist/OneNode/
-          windeployqt --release --qmldir qml dist/OneNode/appOneNode.exe
-          windeployqt --release dist/OneNode/onenode-cli.exe
-          Compress-Archive -Path dist/OneNode -DestinationPath OneNode-windows-x64.zip
+          cmake -S . -B build
+          cmake --build build --config Release
+          ctest --test-dir build -C Release --output-on-failure --timeout 180
 
-      - uses: actions/upload-artifact@v4    # for dry runs: shows up on the run page
+      - name: Package
+        shell: pwsh
+        run: pwsh packaging/windows/package-windows.ps1 -Build build -Version $env:VERSION -Out dist -OpenSslBin $env:OPENSSL_BIN
+
+      # The check runs with a bare PATH, so the OpenSSL DLLs must come from the package itself
+      - name: Check the package (TLS must work inside it)
+        shell: cmd
+        run: |
+          set PATH=C:\Windows\System32;C:\Windows
+          dist\OneNode\onenode-cli.exe selftest
+
+      - uses: actions/upload-artifact@v4
         with:
           name: OneNode-windows-x64
-          path: OneNode-windows-x64.zip
+          path: dist/*.zip
+          if-no-files-found: error
 
-      - uses: softprops/action-gh-release@v2   # only for tag pushes: attaches the zip to a Release
-        if: startsWith(github.ref, 'refs/tags/')
+  macos:
+    name: macOS (Apple silicon, zip)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jurplel/install-qt-action@v4
         with:
-          files: OneNode-windows-x64.zip
-          prerelease: true
+          version: ${{ env.QT_VERSION }}
+          cache: true
+
+      - name: Tools
+        run: |
+          brew install ninja openssl@3
+          OPENSSL_PREFIX="$(brew --prefix openssl@3)"
+          echo "OPENSSL_ROOT_DIR=$OPENSSL_PREFIX" >> "$GITHUB_ENV"
+          echo "OPENSSL_LIB=$OPENSSL_PREFIX/lib" >> "$GITHUB_ENV"
+
+      # static OpenSSL: the program itself needs no OpenSSL library. (Qt's TLS plugin still needs the two .dylib files, which the packaging script copies in.)
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DONENODE_STATIC_OPENSSL=ON
+          cmake --build build
+
+      - name: Test
+        env:
+          ONENODE_MULTICAST_TEST: optional
+          QT_QPA_PLATFORM: offscreen
+          DYLD_LIBRARY_PATH: ${{ env.OPENSSL_LIB }}   # tests run outside the package, where Qt's TLS plugin needs help finding libssl
+        run: ctest --test-dir build --output-on-failure --timeout 180
+
+      - name: Package
+        run: bash packaging/macos/package-macos.sh build "$VERSION" dist
+
+      # no DYLD_LIBRARY_PATH here: the OpenSSL files must come from inside the app
+      - name: Check the package (TLS must work inside it)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          unset DYLD_LIBRARY_PATH
+          dist/OneNode.app/Contents/MacOS/appOneNode --selftest
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OneNode-macos-arm64
+          path: dist/*.zip
+          if-no-files-found: error
+
+  android:
+    name: Android (APK)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-35 build-tools;35.0.0"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Tests
+        working-directory: android
+        run: ./gradlew --no-daemon :core:test :core:testConscrypt :app:testDebugUnitTest
+
+      # With your own signing key (four secrets, see docs/RELEASING.md) every release can update the one before it.
+      # Without the secrets the APK gets a throw-away key: fine for trying, but it can not be installed over an older one.
+      - name: Signing key (only if the secrets exist)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "ONENODE_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          else
+            echo "::notice::No signing secrets: the APK is signed with a temporary key."
+          fi
+
+      - name: Build the release APK
+        working-directory: android
+        env:
+          ONENODE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ONENODE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ONENODE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ONENODE_VERSION_NAME: ${{ env.VERSION }}
+          ONENODE_VERSION_CODE: ${{ github.run_number }}
+        run: ./gradlew --no-daemon :app:assembleRelease
+
+      - name: Name the file and check its signature
+        run: |
+          mkdir -p dist
+          cp android/app/build/outputs/apk/release/app-release.apk "dist/OneNode-${VERSION}-android.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs "dist/OneNode-${VERSION}-android.apk"
+          ls -l dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OneNode-android
+          path: dist/*.apk
+          if-no-files-found: error
+
+  publish:
+    name: Attach to the GitHub Release
+    if: github.ref_type == 'tag'   # a dry run (started by hand) never publishes
+    needs: [linux, windows, macos, android]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write              # the only job that may write to the repository
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          prerelease: true         # marked "pre-release" until you decide otherwise on GitHub

@@ -1,0 +1,55 @@
+# REFERENCE ONLY. This is the library / command-line / tests part of the CMake file as it builds and passes in my Linux checks
+# (Qt 6.4, OpenSSL 3.0). Your GUI target (appOneNode with qt_add_qml_module, fonts, icons, install rules) is not in here: keep yours,
+# and only add the four new QML files to its QML_FILES (qml/PinDialog.qml qml/PairDialog.qml qml/NearbyRow.qml qml/PairedRow.qml).
+
+cmake_minimum_required(VERSION 3.16)
+project(OneNode VERSION 0.1 LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+find_package(Qt6 REQUIRED COMPONENTS Quick Network)
+
+# macOS release builds link OpenSSL statically (see docs/CMAKE_CHANGES.md)
+option(ONENODE_STATIC_OPENSSL "Link OpenSSL statically instead of using its shared library" OFF)
+if(ONENODE_STATIC_OPENSSL)
+    set(OPENSSL_USE_STATIC_LIBS ON)
+endif()
+find_package(OpenSSL 3.0 REQUIRED)
+
+add_library(onenode_core STATIC
+    src/core/source-files/corebridge.cpp
+    src/core/source-files/dnsmessage.cpp
+    src/core/source-files/identity.cpp
+    src/core/source-files/mdnsservice.cpp
+    src/core/source-files/pairingengine.cpp
+    src/core/source-files/pairingmode.cpp
+    src/core/source-files/tlsconfig.cpp
+    src/core/source-files/truststore.cpp
+    src/core/source-files/protocol.cpp
+    src/core/source-files/receivesession.cpp
+    src/core/source-files/sendsession.cpp
+    src/core/source-files/transfermodel.cpp
+    src/core/header-files/corebridge.h
+    src/core/header-files/dnsmessage.h
+    src/core/header-files/identity.h
+    src/core/header-files/mdnsservice.h
+    src/core/header-files/pairingengine.h
+    src/core/header-files/pairingmode.h
+    src/core/header-files/tlsconfig.h
+    src/core/header-files/truststore.h
+    src/core/header-files/netutil.h
+    src/core/header-files/progressthrottle.h
+    src/core/header-files/protocol.h
+    src/core/header-files/receivesession.h
+    src/core/header-files/sendsession.h
+    src/core/header-files/transfermodel.h
+)
+target_include_directories(onenode_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/core/header-files)
+target_link_libraries(onenode_core PUBLIC Qt6::Network OpenSSL::Crypto)
+target_compile_options(onenode_core PRIVATE -Wall -Wextra)   # on MSVC use /W4 instead; CI does not require warning-free builds
+
+add_executable(onenode-cli src/cli/main.cpp)
+target_link_libraries(onenode-cli PRIVATE onenode_core)
+
+enable_testing()
+add_subdirectory(tests)

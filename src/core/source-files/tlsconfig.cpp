@@ -1,5 +1,28 @@
 #include "tlsconfig.h"
 
+#include <QSslSocket>
+
+QString TlsConfig :: selectBackend()
+{
+    if (!QSslSocket :: supportsSsl()) {
+        return "Secure connections are not available: OneNode could not find the OpenSSL libraries it needs. Reinstall OneNode.";
+    }
+
+    if (!QSslSocket :: availableBackends().contains("openssl")) {
+        return "Secure connections are not available: this build of Qt has no OpenSSL support. Reinstall OneNode.";
+    }
+
+    if (QSslSocket :: activeBackend() != "openssl" && !QSslSocket :: setActiveBackend("openssl")) {
+        return "Secure connections are not available: OneNode could not switch on the OpenSSL backend. Reinstall OneNode.";
+    }
+
+    if (!QSslSocket :: isProtocolSupported(QSsl :: TlsV1_3)) {
+        return "Secure connections are not available: the OpenSSL on this computer is too old (TLS 1.3 is required).";
+    }
+
+    return QString();
+}
+
 QSslConfiguration TlsConfig :: make (const QSslCertificate &cert, const QSslKey &key)
 {
     QSslConfiguration config = QSslConfiguration :: defaultConfiguration();

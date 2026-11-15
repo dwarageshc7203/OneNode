@@ -1,0 +1,9 @@
+<resources>
+    <!-- the window background is painted before Compose starts, so there is no white flash -->
+    <style name="Theme.OneNode" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/onenode_page</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>

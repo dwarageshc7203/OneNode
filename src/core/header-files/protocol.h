@@ -6,9 +6,20 @@
 
 namespace Protocol {
 
-constexpr int version = 1; // protocol version
+constexpr int version = 2; // protocol version
 constexpr quint32 maxHeaderSize = 16384; // 16 KiB header size (limitting attacks where they pass large headers - prevents excessive memory usage)
 constexpr quint16 defaultPort = 45454; // Port number for both the sender and receiver
+
+// How long each phase may take (PROTOCOL.md section 7). Every limit exists so that a stalled or hostile peer
+// cannot keep a connection (and its memory) alive forever. A struct, not constants, so tests can use tiny values.
+struct Timeouts {
+    int helloMs = 10000;            // first message (hello) after the TLS handshake
+    int firstPairMessageMs = 60000; // after "pairing_required": the user is typing the PIN, so this is generous
+    int pairMessageMs = 5000;       // each pairing message once the exchange has started
+    int pairTotalMs = 30000;        // the whole 20-round exchange
+    int idleMs = 30000;             // a file is moving but nothing arrives for this long
+    int pinLifetimeMs = 120000;     // how long a PIN stays valid (pairing mode)
+};
 
 enum class decodeStatus {Ok, NeedMoreData, Invalid};
 // Ok -> header filling operation done and those filled bytes are removed from the buffer

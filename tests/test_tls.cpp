@@ -47,6 +47,13 @@ private:
 
 private slots:
 
+    void initTestCase()
+    {
+        const QString problem = TlsConfig :: selectBackend();
+        QVERIFY2(problem.isEmpty(), qPrintable(problem));
+        QCOMPARE(QSslSocket :: activeBackend(), QString("openssl"));
+    }
+
     void bothSidesSeeEachOthersFingerprint()
     {
         Device a, b;

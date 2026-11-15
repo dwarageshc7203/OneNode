@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- the OneNode mark (same as the desktop icon): a white ring with a pale dot, inside the adaptive-icon safe zone -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M54,54m-22,0a22,22 0,1 1,44 0a22,22 0,1 1,-44 0"
+        android:strokeWidth="9"
+        android:strokeColor="#FFFFFF" />
+    <path
+        android:fillColor="#E6F4EA"
+        android:pathData="M54,54m-5.5,0a5.5,5.5 0,1 1,11 0a5.5,5.5 0,1 1,-11 0" />
+</vector>

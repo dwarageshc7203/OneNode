@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=OneNode
+Comment=Send files to devices on your network, with no server in between
+Exec=appOneNode
+Icon=onenode
+Categories=Network;FileTransfer;
+Terminal=false

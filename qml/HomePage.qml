@@ -14,11 +14,13 @@ Item {
     // the page does not know about other pages: it only announces what the user wants, and Main.qml reacts
     signal sendRequested()           // "Choose files" was pressed
     signal filesDropped(var urls)    // files were dropped on the drop zone; urls is the list of them
+    signal pairRequested()           // "Pair a new device" was pressed
 
     // given by Main.qml
     required property var transfers // the list of transfers (a TransferModel)
     property bool listening: false  // is the core waiting for incoming files?
     property string address: ""     // "192.168.1.23:45454": what the other device must type in
+    property string discoveryProblem: "" // why nearby discovery is off ("" = it is on)
 
     // The content column. On a wide window it stops growing at Theme.maxContentWidth and stays centered;
     // on a narrow window it shrinks to fit, keeping a margin at each side.
@@ -58,6 +60,40 @@ Item {
                     text: "Your address: " + page.address
                     font.pixelSize: Theme.fontSmall
                     color: Theme.textMuted
+                }
+            }
+            Text {
+                objectName: "discoveryProblem"
+                Layout.fillWidth: true
+                visible: page.listening && page.discoveryProblem !== ""
+                wrapMode: Text.Wrap
+                text: "Other devices cannot find this one by name: " + page.discoveryProblem + " They can still use your address."
+                font.pixelSize: Theme.fontSmall
+                color: Theme.textMuted
+            }
+        }
+
+        // ---- pairing: a new device must be paired once, with a PIN ----
+        Card {
+            Layout.fillWidth: true
+            visible: page.listening
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.space3
+
+                Text {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    text: "A new device wants to send you something? Pair it once with a PIN."
+                    font.pixelSize: Theme.fontBody
+                    color: Theme.text
+                }
+                AppButton {
+                    objectName: "pairButton"
+                    text: "Pair a new device"
+                    kind: "outline"
+                    onClicked: page.pairRequested()
                 }
             }
         }

@@ -1,6 +1,8 @@
 #include "receivesession.h"
 #include "protocol.h"
 #include "netutil.h"
+#include "pairingmode.h"
+#include "truststore.h"
 
 #include <QDebug>
 #include <QJsonParseError>
@@ -40,16 +42,32 @@ static QString uniquePath(const QString &path)
 }
 
 // Constructor
-ReceiveSession :: ReceiveSession (QTcpSocket *clientSocket, const QString &destinationDir, QObject *parent) : QObject(parent), socket(clientSocket), destinationDir (destinationDir) {
+ReceiveSession :: ReceiveSession (QTcpSocket *clientSocket, const Services &services, QObject *parent) : QObject(parent), socket(clientSocket), services(services) {
     qDebug() << "Session created for " << prettyNetworkAddress(socket -> peerAddress());
 
     connect(socket, &QTcpSocket :: readyRead, this, &ReceiveSession :: readData);
     connect(socket, &QTcpSocket :: disconnected, this, &ReceiveSession :: onDisconnected);
+
+    deadline.setSingleShot(true);
+    exchangeTimer.setSingleShot(true);
+    connect(&deadline, &QTimer :: timeout, this, &ReceiveSession :: onDeadline);
+    connect(&exchangeTimer, &QTimer :: timeout, this, &ReceiveSession :: onDeadline);
+    if (services.pairing) {
+        connect(services.pairing, &PairingMode :: ended, this, &ReceiveSession :: onPairingEnded);
+    }
+
+    deadline.start(services.timeouts.helloMs); // the other device must say hello soon
+
+    // With TLS 1.3 the sender may finish ITS side of the handshake and send "hello" before this session exists.
+    // Those bytes are then already waiting in the socket, and no readyRead will ever announce them again.
+    // So: look once, right after construction (queued, so the creator can finish connecting its signals first).
+    QMetaObject :: invokeMethod(this, &ReceiveSession :: readData, Qt :: QueuedConnection);
 }
 
 // Destructor
 ReceiveSession :: ~ReceiveSession()
 {
+    releaseAttempt(); // never leave the pairing door blocked
     if (incomingFile) {
         qDebug() << "Session destroyed mid-transfer, removing " << incomingFile -> fileName();
         incomingFile -> remove();
@@ -67,6 +85,11 @@ void ReceiveSession :: readData()
 
     receivedBuffer.append(socket->readAll());
 
+    // while a file is moving, every arrival restarts the "nothing for 30 s" countdown
+    if (inFilePhase() && deadline.isActive()) {
+        deadline.start(services.timeouts.idleMs);
+    }
+
     while (processBuffer()) { // proceed with the next action with the current status
 
     }
@@ -75,6 +98,8 @@ void ReceiveSession :: readData()
 // Disconnection handle
 void ReceiveSession :: onDisconnected()
 {
+    releaseAttempt(); // left in the middle of pairing: burns the PIN if the exchange had begun
+
     if (incomingFile) {
 
         if (!closing) {
@@ -88,6 +113,159 @@ void ReceiveSession :: onDisconnected()
     }
 
     deleteLater();
+}
+
+// a phase took too long (slow-loris protection: nobody may hold a connection open by saying nothing)
+void ReceiveSession :: onDeadline()
+{
+    reject("timeout", "The other device took too long");
+}
+
+// the PIN expired or the user cancelled pairing mode while this sender was still at the door
+void ReceiveSession :: onPairingEnded (const QString &)
+{
+    if (holdsAttempt && !closing) {
+        holdsAttempt = false; // the mode is already over, nothing left to release
+        reject("pairing_timeout", "The PIN is no longer valid");
+    }
+}
+
+// gives the place at the pairing door back; PairingMode burns the PIN itself if the exchange had begun
+void ReceiveSession :: releaseAttempt()
+{
+    if (!holdsAttempt) {
+        return;
+    }
+    holdsAttempt = false;
+    if (services.pairing) {
+        services.pairing -> attemptAbandoned();
+    }
+}
+
+// ---- before the file: hello and pairing (PROTOCOL.md sections 4 and 5) ----
+
+bool ReceiveSession :: handleHello()
+{
+    QJsonObject message;
+    const Protocol :: decodeStatus status = Protocol :: tryDecodeFrame(receivedBuffer, message);
+    if (status == Protocol :: decodeStatus :: NeedMoreData) {
+        return false;
+    }
+    if (status == Protocol :: decodeStatus :: Invalid) {
+        reject("invalid_header", "Invalid first message");
+        return false;
+    }
+
+    // a device that jumps straight to "file" without introducing itself
+    if (message.value("type").toString() == "file") {
+        reject("not_paired", "A file was offered before hello");
+        return false;
+    }
+    if (!message.value("v").isDouble() || message.value("v").toInt() != Protocol :: version) {
+        reject("unsupported", "Unsupported protocol version");
+        return false;
+    }
+    if (message.value("type").toString() != "hello" || !message.value("name").isString()) {
+        reject("invalid_header", "First message must be hello with a name");
+        return false;
+    }
+
+    peerName = TrustStore :: cleanName(message.value("name").toString()); // from the network: untrusted text, cleaned
+    const bool senderKnowsUs = message.value("known").toBool(false);
+
+    const bool trusted = services.trust && services.trust -> isTrusted(services.peerFingerprint);
+    if (trusted && senderKnowsUs) {
+        // an old friend, in both directions: straight to the file
+        sendResult("ok", QString(), "hello_result");
+        state = State :: AwaitPrefix;
+        deadline.start(services.timeouts.idleMs);
+        return true;
+    }
+
+    // not paired (or only one of us remembers the other): pairing is needed, and only works in pairing mode
+    if (services.pairing && services.pairing -> beginAttempt()) {
+        holdsAttempt = true;
+        sendResult("pairing_required", QString(), "hello_result");
+        state = State :: AwaitFirstPair;
+        deadline.start(services.timeouts.firstPairMessageMs);
+        return true;
+    }
+
+    reject((services.pairing && services.pairing -> active()) ? "busy" : "pairing_off", "Pairing refused");
+    return false;
+}
+
+bool ReceiveSession :: handlePairMessage()
+{
+    QJsonObject message;
+    const Protocol :: decodeStatus status = Protocol :: tryDecodeFrame(receivedBuffer, message);
+    if (status == Protocol :: decodeStatus :: NeedMoreData) {
+        return false;
+    }
+    if (status == Protocol :: decodeStatus :: Invalid) {
+        reject("pairing_failed", "Invalid pairing message");
+        return false;
+    }
+
+    if (state == State :: AwaitFirstPair) {
+        // round 0 begins now: from here on a failure burns the PIN
+        if (!services.pairing || !services.pairing -> active()) {
+            reject("pairing_timeout", "The PIN is no longer valid");
+            return false;
+        }
+        engine = std :: make_unique<PairingEngine>(PairingEngine :: Role :: Receiver, services.pairing -> pin(),
+                                                   PairingEngine :: fingerprintBytes(services.peerFingerprint),
+                                                   PairingEngine :: fingerprintBytes(services.ownFingerprint));
+        services.pairing -> attemptStartedExchange();
+        exchangeTimer.start(services.timeouts.pairTotalMs);
+        state = State :: Pairing;
+    }
+
+    if (!engine -> accept(message)) {
+        reject("pairing_failed", "A pairing check failed");
+        return false;
+    }
+
+    driveEngine();
+    return !closing && !receivedBuffer.isEmpty(); // more bytes already waiting: look at them too
+}
+
+// Sends everything the engine wants to send now, then waits (with a short timer) for the other side.
+void ReceiveSession :: driveEngine()
+{
+    while (engine -> action() == PairingEngine :: Action :: SendCommit || engine -> action() == PairingEngine :: Action :: SendOpen) {
+        socket -> write(Protocol :: encodeFrame(engine -> makeMessage()));
+    }
+
+    if (engine -> action() == PairingEngine :: Action :: Done) {
+        finishPairing();
+    } else if (engine -> action() == PairingEngine :: Action :: Failed) {
+        reject("pairing_failed", "A pairing check failed");
+    } else {
+        deadline.start(services.timeouts.pairMessageMs); // each pairing message must arrive within 5 s
+    }
+}
+
+void ReceiveSession :: finishPairing()
+{
+    exchangeTimer.stop();
+
+    // remember the other device BEFORE telling it "ok", so a crash cannot leave one side paired and the other not
+    const QString problem = services.trust ? services.trust -> add(services.peerFingerprint, peerName) : QString("no trust list");
+    if (!problem.isEmpty()) {
+        reject("write_failed", "Could not save the paired device: " + problem);
+        return;
+    }
+
+    holdsAttempt = false;
+    if (services.pairing) {
+        services.pairing -> attemptSucceeded(services.peerFingerprint, peerName); // closes pairing mode, tells the screen
+    }
+    sendResult("ok", QString(), "pair_result");
+
+    engine.reset();
+    state = State :: AwaitPrefix; // the same connection now carries the file
+    deadline.start(services.timeouts.idleMs);
 }
 
 // prefix handler
@@ -181,7 +359,7 @@ bool ReceiveSession :: handleHeader()
     qDebug() << "Session header is valid";
 
     // Initialization of Directory to save files
-    const QString &destination = destinationDir;
+    const QString &destination = services.destinationDir;
 
     QDir dir;
 
@@ -236,6 +414,7 @@ void ReceiveSession :: finishFile()
     expectedHeaderSize = 0;
     receivedSize = 0;
     state = State :: AwaitPrefix; // setting the bookmark to the first progress again - basically i am resetting it
+    deadline.stop(); // the file is complete: no more "nothing arrives" countdown
 
     if (!QFile::rename(partPath, finalPath)) {
         QFile :: remove(partPath); // removing the .onenode-part file (partially written file) from the disk
@@ -285,6 +464,13 @@ bool ReceiveSession :: handleBody()
 bool ReceiveSession :: processBuffer()
 {
     switch (state) {
+    case State :: AwaitHello:
+        return handleHello();
+
+    case State :: AwaitFirstPair:
+    case State :: Pairing:
+        return handlePairMessage();
+
     case State :: AwaitPrefix:
         return handlePrefix();
 
@@ -301,30 +487,29 @@ bool ReceiveSession :: processBuffer()
     return false;
 }
 
-// sends acknowledgement result to the sender - handled by onReadyRead()
-void ReceiveSession :: sendResult(const QString &status, const QString &code)
+// sends a reply to the sender. `type` is hello_result / pair_result / file_result; empty means "the one that fits the phase".
+void ReceiveSession :: sendResult(const QString &status, const QString &code, const QString &type)
 {
+    QString replyType = type;
+    if (replyType.isEmpty()) {
+        replyType = state == State :: AwaitHello ? "hello_result"
+                  : (state == State :: AwaitFirstPair || state == State :: Pairing) ? "pair_result"
+                  : "file_result";
+    }
+
     QJsonObject reply;
     reply["v"] = Protocol :: version;
-    reply["type"] = "file_result";
+    reply["type"] = replyType;
     reply["status"] = status;
 
+    if (replyType == "hello_result") {
+        reply["name"] = services.ownName; // so the other device can show who it reached (and save our name when pairing)
+    }
     if (!code.isEmpty()) { // only when there is an error, code is added
         reply["code"] = code;
     }
 
-    const QByteArray frame = Protocol :: encodeFrame(reply);
-
-    qDebug() << "Sending frames: " << frame.toHex(' ');
-    socket -> write(frame); // queues it for sending
-
-    // in short, this function does this:
-    // Init a JSON object and it's protocol format
-    // convert it into text (byte array) with no extra spaces or lines
-    // then creates a byte array and init with 4 bytes and 0's
-    // adds the JSON object's size (as BigEndian) into the byte array
-    // appends the JSON object's text as bytes to the existing byte array
-    // sends the byte array to the socket to send to the client (from receiver)
+    socket -> write(Protocol :: encodeFrame(reply)); // queues it for sending
 }
 
 // rejection handler (yes, it is, not alcohol)
@@ -335,10 +520,21 @@ void ReceiveSession :: reject(const QString &code, const QString &reason)
     }
 
     closing = true;
-    qDebug() << "Rejected: " << reason;
-    emit failed(currentName, reason);
+    deadline.stop();
+    exchangeTimer.stop();
+    qDebug() << "Rejected: " << code << reason;
 
-    sendResult("error", code);
+    // A device that is not (yet) trusted must not be able to put anything on our screen:
+    // for it we only log. Once trusted, a failure is a real event the user may want to see.
+    if (inFilePhase()) {
+        emit failed(currentName, reason);
+    } else {
+        emit refused(code, reason);
+    }
+
+    // "not_paired" is the answer to a file offered too early, so it goes in a file_result
+    sendResult("error", code, code == "not_paired" ? QString("file_result") : QString());
+    releaseAttempt(); // after the reply, so the PIN burns only when the exchange really began
     socket -> disconnectFromHost();
 }
 

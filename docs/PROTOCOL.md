@@ -16,6 +16,7 @@ Words used below:
 ## 1. Transport: TLS
 
 - Everything runs over **one TCP port** (default `45454`), inside **TLS 1.3**. There is no plain-text mode and no fallback.
+- Implementations on all platforms use the same TLS stack behaviour: the desktop app uses OpenSSL (macOS's and Windows' built-in TLS are not used, because TLS 1.3 with client certificates is not reliable there), the Android app uses the system's TLS 1.3 (Conscrypt).
 - **Both sides present a certificate** (mutual TLS). The receiver MUST ask the sender for one.
 - Every device owns one **self-signed certificate** and its private key, created on first start and kept for good.
 - **Trust is decided by fingerprint, not by certificate chains.** Expiry dates, issuer and subject name are ignored.
@@ -41,8 +42,8 @@ Words used below:
 
 | type | from | fields |
 |---|---|---|
-| `hello` | sender | `name` (string) |
-| `hello_result` | receiver | `status`: `"ok"` or `"pairing_required"`, or `"error"` + `code`; `name` (string) |
+| `hello` | sender | `name` (string), `known` (boolean: "this device has the receiver's fingerprint on its list") |
+| `hello_result` | receiver | `status`: `"ok"` or `"pairing_required"`, or `"error"` + `code`; `name` (string, the receiver's own display name) |
 | `pair_commit` | both | `round` (integer 0 to 19), `commit` (string, 64 lowercase hex) |
 | `pair_open` | both | `round` (integer 0 to 19), `nonce` (string, 32 lowercase hex) |
 | `pair_result` | receiver | `status`: `"ok"` or `"error"` + `code` |
@@ -58,7 +59,7 @@ strip control characters, limit it to 64 characters, and treat an empty name as 
 ```
 sender                                              receiver
   | -------- TLS 1.3 handshake, both certificates -------- |
-  | -- hello {name} ---------------------------------->    |   receiver looks up the sender's fingerprint
+  | -- hello {name, known} ---------------------------->    |   receiver looks up the sender's fingerprint
   | <-- hello_result {status, name} -------------------    |
   |                                                        |
   |   both sides trust each other: skip to "file"          |
@@ -81,22 +82,29 @@ One connection carries one file (as in v1). The receiver closes the connection a
 
 ### 4.1 What the receiver answers to `hello`
 
-| the sender's fingerprint is | receiver is in pairing mode | answer |
-|---|---|---|
-| trusted | (any) | `ok` |
-| not trusted | yes | `pairing_required` |
-| not trusted | no | `error` with `pairing_off` (and nothing is shown on screen) |
+The receiver looks up the sender's fingerprint (from the TLS handshake) and reads `known` from `hello`.
+
+| sender's fingerprint is on the receiver's list | `known` | receiver is in pairing mode | answer |
+|---|---|---|---|
+| yes | true | (any) | `ok` |
+| yes | false | yes, free | `pairing_required` |
+| no | (any) | yes, free | `pairing_required` |
+| any other combination, pairing mode off | | no | `error` with `pairing_off` (and nothing is shown on screen) |
+| | | yes, but another sender is already pairing | `error` with `busy` |
+
+`known: false` from a device the receiver does trust means "I have forgotten you" (for example the sender removed the receiver from its list).
+A plain `ok` would then be unsafe for the sender, so both sides pair again.
 
 ### 4.2 What the sender does after `hello_result`
 
-| receiver says | sender trusts the receiver's fingerprint | the sender... |
-|---|---|---|
-| `ok` | yes | sends `file` |
-| `ok` | no | asks the user for the PIN and starts pairing |
-| `pairing_required` | yes or no | asks the user for the PIN and starts pairing |
+| receiver says | the sender... |
+|---|---|
+| `ok` | checks that the receiver's fingerprint IS on its own list, then sends `file`. If it is not (a misbehaving receiver), it stops: it never sends a file to a device it does not know. |
+| `pairing_required` | asks the user for the PIN shown on the receiver and starts pairing |
+| `error` | shows the code as a sentence and stops |
 
-So a file is only sent when **both** sides know each other. In every other case the two devices introduce themselves again.
-While the user types the PIN the connection stays open; it is closed when the receiver's pairing mode ends.
+A file is only sent when **both** sides know each other. While the user types the PIN the connection stays open (the receiver waits up to 60 seconds for the first pairing message).
+A sender that has several files for one receiver sends the first one alone and starts the others only after `ok` or a finished pairing, so the user types the PIN once.
 
 ### 4.3 More rules for the receiver
 
@@ -113,11 +121,12 @@ receiver by reading a PIN off its screen; the sender's user types it in.
 
 - Only the receiver's own user can start it (a button such as "Pair a new device"). Nothing from the network can.
 - It creates a **PIN**: a number from 0 to 999 999 chosen uniformly at random with a cryptographically secure random source,
-  shown as 6 digits with leading zeros, grouped "482 913".
+  shown as 6 digits with leading zeros, grouped "482 913". Starting it again creates a **new** PIN.
 - It lasts **120 seconds**, then the PIN is thrown away.
-- It allows **3 failed exchanges**. After the third the mode ends and the PIN is thrown away. A new mode creates a new PIN.
-- It allows **one exchange at a time**: a `pair_commit` for round 0 while another exchange is running gets `pair_result`
-  with `busy`, and the connection is closed.
+- **A PIN is single use.** If an exchange *begins* (the first `pair_commit` arrived) and does not end in success, for any reason (a wrong PIN, a failed check, a timeout, the connection dropping), the PIN is burnt and
+  the mode ends. The user starts it again to get a new PIN. (Section 5.2 explains why this matters.)
+  A sender that connects, gets `pairing_required` and leaves *before* sending the first `pair_commit` does not burn the PIN.
+- It allows **one sender at a time**: from `pairing_required` until the sender leaves or the exchange ends, any other `hello` that needs pairing gets `busy`.
 - On success the mode ends (one PIN pairs one device).
 
 ### 5.2 Why the PIN is never sent, not even hashed
@@ -127,6 +136,11 @@ can be tried against all 1 000 000 values in about a second. Someone sitting bet
 recover the PIN offline, then pair as the sender. A slow hash only raises the price. So the PIN is **never** put on the wire in any form
 that can be tested offline. Instead the devices reveal it **one bit at a time** with commitments, as in the passkey entry of Bluetooth LE
 (only the recipe is borrowed, no Bluetooth is involved), and each commitment also contains **both fingerprints**.
+
+**Why a PIN may only be used once.** In every round the sender reveals its nonce (and so, to someone who checks, its bit) *before* it has verified the receiver's commitment.
+A fake receiver can therefore learn one real bit of the PIN per round from an honest sender, even though the exchange then fails.
+If the same PIN could be tried again, those bits would add up and the attacker's odds would collapse. With a single-use PIN the learned bits are worthless, because the next attempt uses a new PIN.
+The receiver never reveals anything before it has verified the other side, so a fake sender learns nothing from the receiver.
 
 ### 5.3 The exchange
 
@@ -170,7 +184,7 @@ If the connection breaks right after the receiver saved its side, the receiver t
 
 - **The order is the point.** The sender commits first, then the receiver commits, and only then does the sender open. Someone in the middle
   has to commit to a bit toward one device before it learns anything about that bit, so each round it can only guess: it is right half of the time.
-  All 20 rounds: 1 chance in 1 048 576 per exchange, at most 3 exchanges per PIN (about 3 in a million).
+  All 20 rounds: 1 chance in 1 048 576 per PIN, and a PIN is used for one exchange only.
 - **A commitment cannot be changed afterwards** and it contains both fingerprints. A device in the middle that shows each side its own fake certificate
   makes the two sides compute different commitments, so it fails in round 0 even if the correct PIN was typed. It cannot simply relay.
 - **Nothing is testable offline.** The nonces are random and fresh each round, so a recording of an exchange gives no way to try PINs.
@@ -212,6 +226,7 @@ The following must be reproduced by an implementation. `fpS` = byte `0x11` repea
 | `busy` | another pairing exchange is running |
 | `pairing_failed` | a round check failed, or the steps came in a wrong order |
 | `pairing_timeout` | the PIN's 120 seconds ended |
+| `timeout` | the other device took too long (see section 7) |
 
 Rules: every error path sends **exactly one** reply and then closes. `file_result` `ok` is sent only after the file is fully
 written, its checksum verified, and its final name in place. Existing files are never overwritten.
@@ -224,31 +239,93 @@ written, its checksum verified, and its final name in place. Existing files are 
 | TLS handshake | 10 s |
 | first message (`hello`) after the handshake | 10 s |
 | PIN lifetime (pairing mode) | 120 s |
-| failed exchanges per PIN | 3 |
+| PIN used for | one exchange |
+| after `pairing_required`: the first `pair_commit` | 60 s (the user is typing) |
 | each pairing message, once round 0 has started | 5 s |
 | the whole exchange (20 rounds) | 30 s |
-| nothing received for | 30 s while a file is moving (close; a stalled body counts) |
+| nothing received for | 30 s while a file is moving (the body counts as stalled; the receiver deletes the partial file) |
 | device name | 64 characters, after cleaning |
 
-## 8. What this protects, and what it does not
+When a limit runs out, the side that notices sends one error reply with `timeout` (where a reply is still possible) and closes the connection.
+
+## 8. Finding devices: mDNS / DNS-SD (the "nearby devices" list)
+
+Typing an IP address works always. On top of that, devices announce themselves on the local network so that the
+other devices can show them in a list. This is standard DNS-SD over multicast DNS (RFC 6762 and RFC 6763), so Android's
+`NsdManager` and Apple's Bonjour can take part without any special code.
+
+**Nothing learned this way is trusted.** Anybody on the network can announce anything. The list only saves typing.
+Trust still comes from pairing and from the TLS fingerprint, exactly as in sections 4 and 5.
+
+### 8.1 What is announced
+
+| Item | Value |
+| --- | --- |
+| Multicast group and port | `224.0.0.251`, UDP `5353` (IPv4 only for now) |
+| Service type | `_onenode._tcp.local` |
+| Instance name | `OneNode-<first 8 hex of the fingerprint>._onenode._tcp.local` |
+| Host name | `onenode-<first 8 hex of the fingerprint>.local` |
+| `PTR` | `_onenode._tcp.local` -> instance name |
+| `SRV` | instance -> host name and the TCP port of the TLS server |
+| `A` | host name -> the IPv4 address of that network connection |
+| `TXT` | `v=2`, `fp=<64 lowercase hex>`, `name=<device name>`, and `pair=1` only while "Pair a new device" mode is open |
+| TTL | 120 seconds for every record; `0` means "goodbye" |
+
+- `v` is the protocol version. A device with another `v` is not listed (the transfer would be refused anyway).
+- `fp` is what the device *claims*. The certificate in the TLS handshake is the truth: a sender that picked a device from
+  the list passes the claimed fingerprint along, and **stops before sending anything** when the certificate differs.
+- `name` is cleaned like every other name (section 5.1) and is cut so that the whole `name=...` entry stays under 255 bytes.
+- `pair=1` lets the screen show which devices are waiting for a new device. It is only a hint; the receiver still decides.
+
+### 8.2 When packets are sent
+
+- On start: the announcement (all four records in the answer section) and a query for `_onenode._tcp.local` `PTR`;
+  the announcement is repeated one second later.
+- The query is repeated after 1, 2, 4, 8 ... up to 60 seconds, then every 60 seconds.
+- The announcement is repeated every 60 seconds (the records live for 120).
+- When the name or the pairing mode changes: a new announcement at once.
+- On a clean stop: the same records with TTL 0 (goodbye).
+- A query for the service, the instance or the host name is answered with the full announcement, at most once per second
+  per network connection.
+
+### 8.3 What a receiver of these packets does
+
+Everything from the network is hostile until proven otherwise.
+
+- A packet is rejected when it is longer than 9000 bytes, malformed, uses a compression pointer that does not point
+  backwards, loops, claims more records than it can hold, or uses a name longer than 255 bytes. Rejecting never crashes and never allocates a lot.
+- Packets from outside the local network (source address not in the connection's subnet) and packets whose source port is not 5353 are ignored.
+- At most 500 packets are looked at per second.
+- A record is used only when its name ends with `._onenode._tcp.local`, the `TXT` has `v=2` and a valid, lowercase `fp`,
+  the `SRV` port is not 0, and the address is a real IPv4 address (not loopback, any, broadcast or multicast).
+- A device with no `A` record is reached at the address its packet came from.
+- At most 64 devices are remembered; a flood of fake devices cannot grow memory or push real devices out.
+- Records we sent ourselves (we hear our own multicast) and records that use our own fingerprint are ignored.
+- A device disappears when its `SRV` or `TXT` expires, or when its goodbye (TTL 0) arrives.
+
+Not done on purpose: IPv6, conflict probing (two devices with the same first 8 hex digits would have to start at the same
+moment, and the full fingerprint is checked anyway), known-answer suppression, per-interface host names.
+
+## 9. What this protects, and what it does not
 
 Protected:
 
 - Someone listening on the Wi-Fi cannot read the files.
 - A device that has never been paired cannot put a file on a receiver.
-- A device that cannot see the receiver's screen cannot pair: it does not know the PIN and its blind chance is about 3 in a million per pairing mode.
+- A device that cannot see the receiver's screen cannot pair: it does not know the PIN and its blind chance is 1 in 1 048 576 per PIN (and a PIN gets one exchange).
 - A device in the middle during pairing succeeds with the same tiny chance, whether or not the user is careful.
 - A paired device is recognised by its certificate, not by its IP address, so a changing IP does not matter.
 
 Not protected:
 
 - Someone who can see the receiver's screen while the PIN is shown can read the PIN.
-- Someone on the network can spoil pairing (denial of service) by failing three exchanges, which ends pairing mode. They still cannot pair; the user starts it again.
+- Someone on the network can spoil pairing (denial of service): one failed exchange burns the PIN, and an idle connection can hold the single pairing place for up to 60 seconds. They still cannot pair; the user starts it again.
 - A trusted device that is hacked can still send files to you. They only ever land in the receive folder under a new name, never over an existing file.
 - Someone can still see *that* two devices talk, and how big the transfers are.
+- Anybody on the network can announce a fake device in the nearby list, or hide a real one (denial of service). A fake entry cannot receive anything useful: it has no certificate that matches a paired device, and it does not know the PIN.
 - Anyone who can copy a device's private key file can pretend to be that device. The key file MUST be readable by the owner only.
 
-## 9. Local storage (not part of the wire protocol; for implementers)
+## 10. Local storage (not part of the wire protocol; for implementers)
 
 In the app's data folder:
 
@@ -258,5 +335,26 @@ In the app's data folder:
 - A trusted device can be removed from the list at any time; it then has to pair again.
 - The PIN is never saved anywhere.
 
-Which key type to use (for example ECDSA P-256) and how to create the certificate on every operating system is decided by
-the proof-of-concept step and is not a wire-protocol matter.
+Key type: **ECDSA P-256** on every platform (self-signed certificate). Wire-wise only the fingerprint matters, so another
+implementation may choose differently, but it MUST be able to do TLS 1.3 with a client certificate.
+
+## 11. Android implementation notes (not part of the wire protocol)
+
+The Android app follows sections 1 to 10 exactly. How it gets there on Android:
+
+- **TLS:** the platform's own TLS (Conscrypt), TLS 1.3 only, with client certificates required on the receiving side.
+  A custom trust manager lets every certificate through the *handshake*; the app then decides by fingerprint (section 1).
+  A custom key manager always offers the one device certificate.
+- **Key:** an EC secp256r1 key generated **inside AndroidKeyStore** (it cannot be exported). The Keystore makes the
+  self-signed certificate (30 years). Section 9's "key file readable by the owner only" is met by the key never being a file.
+- **Trusted devices:** `trusted_devices.json` in the app's private storage (section 10 schema), written atomically.
+  `allowBackup` is off and the data-extraction rules exclude everything, so neither list nor key travels in a backup.
+- **Finding devices:** `NsdManager` registers and browses `_onenode._tcp` with the TXT keys of section 8 (`v`, `fp`, `name`, `pair`).
+  The service is registered again when pairing mode turns on/off or the device is renamed. At most 64 peers are kept; IPv4 is preferred.
+  Android's NSD does not support everything in section 8 (for example the exact TTL handling); typing an address always works.
+- **Saving files:** MediaStore, `Downloads/OneNode`, no storage permission. The file is created as *pending* and only becomes
+  visible after the SHA-256 of section 4 is verified; a failed or cancelled transfer leaves nothing behind. A name that already exists gets `(1)`, `(2)`, ...
+- **Receiving in the background:** a foreground service (type `dataSync`) with a notification, started when the user turns Receive on.
+  Android 15 limits such services to about six hours per day; the service stops itself when the system says so.
+  A wake lock is held only while a transfer runs.
+- **Minimum:** Android 10 (API 29); built for API 35.
