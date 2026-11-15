@@ -21,12 +21,9 @@ QString selectBackend();
 // (mutual TLS: both devices show their ID card, not only the server).
 QSslConfiguration make (const QSslCertificate &cert, const QSslKey &key);
 
-// Call this from a socket's sslErrors signal (client) or QSslServer::sslErrors (server).
-// It forgives ONLY the complaints we expect from self-signed cards:
-//   - "self-signed and untrusted"  (we have no authority, trust is by fingerprint)
-//   - "host name mismatch"         (we connect by IP address, the card has no address in it)
-// Everything else (for example "the peer did not present any certificate") is NOT forgiven,
-// so the handshake fails and the connection is dropped.
+// It forgives every complaint about the certificate itself (self-signed, untrusted, host name, expiry, ...),
+// because OneNode decides trust by fingerprint after the handshake. It does NOT forgive a missing certificate
+// ("the peer did not present any certificate"): the handshake then fails and the connection is dropped.
 void acceptSelfSigned (QSslSocket *socket, const QList<QSslError> &errors);
 
 }

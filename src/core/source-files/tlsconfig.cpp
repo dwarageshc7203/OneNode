@@ -45,18 +45,17 @@ QSslConfiguration TlsConfig :: make (const QSslCertificate &cert, const QSslKey 
 
 void TlsConfig :: acceptSelfSigned (QSslSocket *socket, const QList<QSslError> &errors)
 {
+    // Trust in OneNode is decided by the certificate's fingerprint after the handshake (PROTOCOL.md section 1).
+    // The usual checks on the certificate (who signed it, expiry date, host name, purpose flags) are therefore
+    // ignored on purpose. Which of those complaints a system reports differs from one OpenSSL build to the next
+    // (Windows with a newer OpenSSL reports more than Linux does), so listing the "expected" ones breaks on some systems.
+    // The one thing we never forgive is a missing certificate: both sides must show one.
+    // This does NOT skip the proof that the peer owns the key: that is part of the TLS handshake itself.
     QList<QSslError> forgiven;
     for (const QSslError &error : errors) {
-        switch (error.error()) {
-        case QSslError :: SelfSignedCertificate:
-        case QSslError :: SelfSignedCertificateInChain:
-        case QSslError :: HostNameMismatch:
+        if (error.error() != QSslError :: NoPeerCertificate) {
             forgiven.append(error);
-            break;
-        default:
-            break; // anything else stays an error
         }
     }
-    // ignoreSslErrors(list) forgives only the listed ones; if something else is left over, TLS aborts
     socket->ignoreSslErrors(forgiven);
 }
