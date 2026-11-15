@@ -21,9 +21,19 @@ Copy-Item (Join-Path $Build "Release\appOneNode.exe") $folder
 Copy-Item (Join-Path $Build "Release\onenode-cli.exe") $folder
 
 # --no-translations / --no-opengl-sw keep the download small (Qt Quick uses Direct3D, the software OpenGL copy is 20 MB)
-windeployqt --release --no-translations --no-opengl-sw --qmldir (Join-Path $root "qml") (Join-Path $folder "appOneNode.exe")
-windeployqt --release --no-translations --no-opengl-sw (Join-Path $folder "onenode-cli.exe")
-if ($LASTEXITCODE -ne 0) { throw "windeployqt failed" }
+# --force-openssl: without it windeployqt leaves out Qt's OpenSSL TLS plugin, which OneNode needs
+windeployqt --release --force-openssl --no-translations --no-opengl-sw --qmldir (Join-Path $root "qml") (Join-Path $folder "appOneNode.exe")
+if ($LASTEXITCODE -ne 0) { throw "windeployqt failed (appOneNode)" }
+windeployqt --release --force-openssl --no-translations --no-opengl-sw (Join-Path $folder "onenode-cli.exe")
+if ($LASTEXITCODE -ne 0) { throw "windeployqt failed (onenode-cli)" }
+
+# Safety net: if windeployqt still left the plugin out, copy it from the Qt installation ourselves
+$tlsPlugin = Join-Path $folder "tls\qopensslbackend.dll"
+if (-not (Test-Path $tlsPlugin)) {
+    $qtRoot = Split-Path (Split-Path (Get-Command windeployqt).Source)
+    New-Item -ItemType Directory -Force (Join-Path $folder "tls") | Out-Null
+    Copy-Item (Join-Path $qtRoot "plugins\tls\qopensslbackend.dll") $tlsPlugin
+}
 
 Copy-Item (Join-Path $OpenSslBin "libssl-3-x64.dll") $folder
 Copy-Item (Join-Path $OpenSslBin "libcrypto-3-x64.dll") $folder

@@ -24,6 +24,17 @@ cp -R "$BUILD/appOneNode.app" "$APP"
 
 macdeployqt "$APP" -qmldir="$ROOT/qml"
 
+# OneNode does not use databases: remove Qt's SQL plugins (they point at libraries that do not exist on this machine)
+rm -rf "$APP/Contents/PlugIns/sqldrivers"
+
+# The TLS plugin must be there, or every connection would fail (copy it from Qt if macdeployqt left it out)
+TLS_PLUGIN="$APP/Contents/PlugIns/tls/libqopensslbackend.dylib"
+if [ ! -f "$TLS_PLUGIN" ]; then
+    mkdir -p "$APP/Contents/PlugIns/tls"
+    cp "$QT_ROOT_DIR/plugins/tls/libqopensslbackend.dylib" "$TLS_PLUGIN"
+fi
+[ -f "$TLS_PLUGIN" ] || { echo "libqopensslbackend.dylib is missing from the app"; exit 1; }
+
 FRAMEWORKS="$APP/Contents/Frameworks"
 OPENSSL_LIB="$(brew --prefix openssl@3)/lib"
 for lib in libssl.3.dylib libcrypto.3.dylib; do
