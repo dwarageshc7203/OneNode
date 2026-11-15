@@ -99,17 +99,17 @@ jobs:
         shell: pwsh
         continue-on-error: true
         env:
-          QT_DEBUG_PLUGINS: "1"
+          QT_LOGGING_RULES: "qt.network.ssl=true"
         run: |
-          Write-Host "--- OpenSSL DLLs in $env:OPENSSL_ROOT_DIR\bin"
-          Get-ChildItem "$env:OPENSSL_ROOT_DIR\bin" -Filter "*.dll" | Select-Object -ExpandProperty Name
-          Write-Host "--- selftest"
-          $cli = Get-ChildItem build -Recurse -Filter onenode-cli.exe | Select-Object -First 1
-          & $cli.FullName selftest 2>&1 | Select-Object -First 40
-          Write-Host "--- test_tls"
-          $t = Get-ChildItem build -Recurse -Filter test_tls.exe | Select-Object -First 1
-          & $t.FullName -v2 2>&1 | Select-String -Pattern 'ssl|tls|backend|FAIL|Loc:|QWARN|Totals' | Select-Object -First 80
-
+          foreach ($name in 'test_tls', 'test_session') {
+            $exe = Get-ChildItem build -Recurse -Filter "$name.exe" | Select-Object -First 1
+            Write-Host "=== $name ($($exe.FullName))"
+            $out = "$env:RUNNER_TEMP\$name.txt"
+            $p = Start-Process -FilePath $exe.FullName -ArgumentList "-o", "$out,txt" -PassThru -NoNewWindow
+            if (-not $p.WaitForExit(90000)) { Write-Host "TIMED OUT after 90 s, killing it"; $p.Kill() }
+            Write-Host "exit code: $($p.ExitCode)"
+            if (Test-Path $out) { Get-Content $out | Select-Object -First 120 } else { Write-Host "no output file written" }
+          }
       # ---- the Android code talks to the desktop program (both directions, with a PIN) ----
       - name: Java (for the Android interop test)
         if: runner.os == 'Linux'
