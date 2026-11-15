@@ -31,7 +31,7 @@ jobs:
         include:
           - { name: Ubuntu,  os: ubuntu-24.04, qt_arch: linux_gcc_64 }
           - { name: Windows, os: windows-2022, qt_arch: win64_msvc2022_64 }
-          - { name: macOS,   os: macos-14,     qt_arch: "" }
+          - { name: macOS,   os: macos-15,     qt_arch: "" }
 
     steps:
       - uses: actions/checkout@v4
@@ -93,6 +93,22 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build -C Release --output-on-failure --timeout 180
+        
+      - name: Diagnose TLS (Windows only, shows why the TLS tests fail)
+        if: always() && runner.os == 'Windows'
+        shell: pwsh
+        continue-on-error: true
+        env:
+          QT_DEBUG_PLUGINS: "1"
+        run: |
+          Write-Host "--- OpenSSL DLLs in $env:OPENSSL_ROOT_DIR\bin"
+          Get-ChildItem "$env:OPENSSL_ROOT_DIR\bin" -Filter "*.dll" | Select-Object -ExpandProperty Name
+          Write-Host "--- selftest"
+          $cli = Get-ChildItem build -Recurse -Filter onenode-cli.exe | Select-Object -First 1
+          & $cli.FullName selftest 2>&1 | Select-Object -First 40
+          Write-Host "--- test_tls"
+          $t = Get-ChildItem build -Recurse -Filter test_tls.exe | Select-Object -First 1
+          & $t.FullName -v2 2>&1 | Select-String -Pattern 'ssl|tls|backend|FAIL|Loc:|QWARN|Totals' | Select-Object -First 80
 
       # ---- the Android code talks to the desktop program (both directions, with a PIN) ----
       - name: Java (for the Android interop test)
